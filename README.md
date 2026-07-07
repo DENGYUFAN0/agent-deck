@@ -1,5 +1,7 @@
 # agent-deck
 
+**在线 Demo：<https://dengyufan0.github.io/agent-deck/template.html>**（按 `?` 看帮助；导出 PDF 请用 Chrome/Edge）
+
 **用 HTML 取代 PPT 做汇报**：让任何一家 AI agent 按同一份契约，生成「单文件、可放映、**可现场编辑**、**可一键导出 PDF**」的幻灯片。HTML 是唯一源文件，PDF 是定稿快照。
 
 *English: **agent-deck** is a methodology + contract that lets **any AI agent** generate self-contained HTML slide decks that replace PowerPoint: present in any browser (offline, zero dependencies), **edit live during the meeting** (press `E`), save a new versioned file with an embedded revision log, and **export a pixel-perfect 16:9 PDF** via the browser print engine. The contract lives in [PROMPT.md](PROMPT.md) (Chinese; any modern agent follows it fine), the reference implementation in [template.html](template.html). Open `template.html` in Chrome/Edge and press `?` to see everything.*
