@@ -11,7 +11,7 @@ AI agent 时代的幻灯片——源文件 = 播放器 = 编辑器。
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Dependencies: zero](https://img.shields.io/badge/%E4%BE%9D%E8%B5%96-%E9%9B%B6-brightgreen?style=flat-square)
-![Single file](https://img.shields.io/badge/%E5%8D%95%E6%96%87%E4%BB%B6-%E6%96%AD%E7%BD%91%E5%8F%AF%E7%94%A8-orange?style=flat-square)
+[![CI](https://github.com/DENGYUFAN0/agent-deck/actions/workflows/ci.yml/badge.svg)](https://github.com/DENGYUFAN0/agent-deck/actions/workflows/ci.yml)
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-8A2BE2?style=flat-square)
 
 **[▶ 在线 Demo](https://dengyufan0.github.io/agent-deck/template.html)** — 打开后按 <kbd>?</kbd>
@@ -55,6 +55,17 @@ AI agent 时代的幻灯片——源文件 = 播放器 = 编辑器。
 - **C 段 · 从旧 PPT 迁移**：粘贴旧 PPT 的逐页文字。
 
 生成后跑 PROMPT.md 文末的 **60 秒验收清单**，不合格条目原文丢回给 agent 让它修。
+
+## 验收清单是可执行的
+
+每次 push，CI 都会用[合规校验器](checker/check.mjs)对 `template.html` 自动跑 **27 项验收**：断网加载（拦截一切外部请求）、翻页、现场编辑、自动暂存、纯文本粘贴、序列化、打印样式，连 PDF 页数和 16:9 页面尺寸都机检。你也可以对任何 deck 自己跑：
+
+```bash
+cd checker && npm install && npx playwright install chromium
+node check.mjs 你的文件.html
+```
+
+只要 agent 守住契约第 7 条的机器验收锚点，它生成的任何 deck 都能这样机检。欢迎提交跨 agent 的合规报告。
 
 ## 幻灯片长什么样
 

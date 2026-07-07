@@ -11,7 +11,7 @@ English&nbsp;·&nbsp;[简体中文](README.zh-CN.md)&nbsp;·&nbsp;[한국어](RE
 
 ![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
 ![Dependencies: zero](https://img.shields.io/badge/dependencies-zero-brightgreen?style=flat-square)
-![Single file](https://img.shields.io/badge/single%20file-offline--ready-orange?style=flat-square)
+[![CI](https://github.com/DENGYUFAN0/agent-deck/actions/workflows/ci.yml/badge.svg)](https://github.com/DENGYUFAN0/agent-deck/actions/workflows/ci.yml)
 ![PRs welcome](https://img.shields.io/badge/PRs-welcome-8A2BE2?style=flat-square)
 
 **[▶ Live Demo](https://dengyufan0.github.io/agent-deck/template.html)** — open it and press <kbd>?</kbd>
@@ -53,6 +53,17 @@ English&nbsp;·&nbsp;[简体中文](README.zh-CN.md)&nbsp;·&nbsp;[한국어](RE
 - **C — migrate from PPT**: paste your old deck's text content.
 
 Then run the **60-second acceptance checklist** at the bottom of PROMPT.md. Any failed item goes straight back to the agent, verbatim.
+
+## The checklist is executable
+
+Every push runs the [conformance checker](checker/check.mjs) against `template.html` in CI — **27 automated checks**: offline loading (all external requests blocked), navigation, live editing, autosave, plain-text paste, serialization, print CSS, even PDF page count and 16:9 page size. Verify any deck yourself:
+
+```bash
+cd checker && npm install && npx playwright install chromium
+node check.mjs path/to/your-deck.html
+```
+
+Any deck from any agent that honors the contract's machine-checkable anchors (contract item 7) can be verified the same way. Cross-agent conformance reports are welcome.
 
 ## What a slide looks like
 
