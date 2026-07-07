@@ -94,9 +94,11 @@ th{background:var(--soft);color:var(--accent);}
   position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
   display:flex;gap:4px;align-items:stretch;
   background:rgba(18,24,32,.85);border-radius:999px;padding:7px 10px;
-  opacity:.3;transition:opacity .25s;z-index:50;
+  opacity:0;pointer-events:none;transition:opacity .3s;z-index:50;
 }
-#toolbar:hover,body.editing #toolbar{opacity:1;}
+body.ui-visible #toolbar,body.editing #toolbar{opacity:1;pointer-events:auto;}
+/* 放映时观众看不到任何操作痕迹：静止时连光标一并隐去 */
+body:not(.ui-visible):not(.editing){cursor:none;}
 #toolbar button{
   border:0;background:transparent;color:#dfe7f0;
   font-size:13px;font-family:inherit;padding:7px 12px;border-radius:999px;
@@ -173,7 +175,7 @@ body.editing .slide.active.overflow{box-shadow:inset 0 0 0 3px #e05b4d;}
     <h1>【在此填写本次汇报题目】</h1>
     <p class="subtitle">【一句话副标题：当前研究阶段 / 本次汇报重点】</p>
     <p class="meta">汇报人：【姓名】　｜　导师：【导师姓名】　｜　【2026-XX-XX】</p>
-    <div class="cover-hint">→ / 空格 翻页　·　E 编辑　·　？帮助与导出说明</div>
+    <div class="cover-hint">→ / 空格 翻页　·　E 编辑　·　？帮助　·　动一下鼠标唤出底部工具栏</div>
   </section>
 
   <!-- 2 · 进展总览 -->
@@ -359,6 +361,7 @@ body.editing .slide.active.overflow{box-shadow:inset 0 0 0 3px #e05b4d;}
     <span><kbd>E</kbd></span><span>进入 / 退出编辑模式</span>
     <span><kbd>Ctrl</kbd>+<kbd>S</kbd></span><span>保存新版本（已拦截浏览器原生「另存」，那样会丢修改）</span>
     <span><kbd>?</kbd> / <kbd>Esc</kbd></span><span>打开帮助 / 关闭浮层</span>
+    <span>移动鼠标</span><span>唤出底部工具栏（静止 2.5 秒自动隐藏，放映时观众看不到操作痕迹）</span>
   </div>
   <h4>现场编辑与记录</h4>
   <p>按 <kbd>E</kbd> 进入编辑模式后，点击任意文字直接修改（粘贴自动转纯文本）。改动会自动暂存在浏览器里，误关页面不丢；但暂存只是安全网，<b>「保存新版本」下载的 HTML 文件才是唯一可信的存档</b>。若某页内容超出幻灯片高度，会出现红框和提示——超出部分在放映和 PDF 中都会被裁掉，请拆页。</p>
@@ -484,6 +487,7 @@ function serialize(){
   $$('.panel').forEach(function(p){p.hidden=true;});
   $('#restore').hidden=true;$('#dirty').hidden=true;
   $('#toast').classList.remove('show');
+  document.body.classList.remove('ui-visible');
   return '<!DOCTYPE html>\n'+document.documentElement.outerHTML;
 }
 function saveVersion(){
@@ -597,6 +601,18 @@ $$('[data-close]').forEach(function(b){
 $('#toolbar').addEventListener('click',function(e){
   if(e.target.tagName==='BUTTON')e.target.blur();
 });
+/* 放映隐蔽：工具栏平时全隐，鼠标移动浮现，静止 2.5s 淡出；编辑模式常显 */
+var uiTimer=null;
+function wakeUI(){
+  document.body.classList.add('ui-visible');
+  clearTimeout(uiTimer);
+  uiTimer=setTimeout(function(){
+    if(editing)return;
+    if($('#toolbar').matches(':hover')){wakeUI();return;}
+    document.body.classList.remove('ui-visible');
+  },2500);
+}
+document.addEventListener('mousemove',wakeUI);
 window.addEventListener('resize',fit);
 window.addEventListener('hashchange',function(){
   var n=parseInt(location.hash.slice(1),10);
@@ -607,6 +623,7 @@ var start=parseInt(location.hash.slice(1),10);
 show(start?start-1:0);
 fit();
 checkRestore();
+wakeUI(); /* 打开后先显示工具栏几秒，帮助发现 */
 /* 对外 API：方便自动化与其他 agent 驱动 */
 window.deck={
   go:function(n){show(n-1);},
