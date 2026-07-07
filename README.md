@@ -1,56 +1,86 @@
+<div align="center">
+
+<img src="assets/slide-cover.png" alt="agent-deck — cover slide of the reference template" width="720">
+
 # agent-deck
 
-**在线 Demo：<https://dengyufan0.github.io/agent-deck/template.html>**（按 `?` 看帮助；导出 PDF 请用 Chrome/Edge）
+**One HTML file that presents, edits itself live, and exports a pixel-perfect PDF.**<br>
+Slides for the AI-agent era — the deck *is* the source, the player, and the editor.
 
-**用 HTML 取代 PPT 做汇报**：让任何一家 AI agent 按同一份契约，生成「单文件、可放映、**可现场编辑**、**可一键导出 PDF**」的幻灯片。HTML 是唯一源文件，PDF 是定稿快照。
+English&nbsp;·&nbsp;[简体中文](README.zh-CN.md)&nbsp;·&nbsp;[한국어](README.ko.md)
 
-*English: **agent-deck** is a methodology + contract that lets **any AI agent** generate self-contained HTML slide decks that replace PowerPoint: present in any browser (offline, zero dependencies), **edit live during the meeting** (press `E`), save a new versioned file with an embedded revision log, and **export a pixel-perfect 16:9 PDF** via the browser print engine. The contract lives in [PROMPT.md](PROMPT.md) (Chinese; any modern agent follows it fine), the reference implementation in [template.html](template.html). Open `template.html` in Chrome/Edge and press `?` to see everything.*
+![License: MIT](https://img.shields.io/badge/license-MIT-blue?style=flat-square)
+![Dependencies: zero](https://img.shields.io/badge/dependencies-zero-brightgreen?style=flat-square)
+![Single file](https://img.shields.io/badge/single%20file-offline--ready-orange?style=flat-square)
+![PRs welcome](https://img.shields.io/badge/PRs-welcome-8A2BE2?style=flat-square)
 
-## 为什么这能改变 PPT 汇报的格局
+**[▶ Live Demo](https://dengyufan0.github.io/agent-deck/template.html)** — open it and press <kbd>?</kbd>
 
-1. **源文件 = 播放器 = 编辑器**：一个 HTML 文件双击即放映，会中按 `E` 当场改，不用退出放映切软件；
-2. **AI agent 原生格式**：纯文本，任何 agent 整文件读写，一轮对话完成生成或修改——.pptx 对 agent 是黑盒，HTML 是母语；
-3. **文件自带历史**：每次「保存新版本」自动版本号 +1、修改说明内嵌文件中，版本文件串起来就是一条进展时间线；PDF 快照负责分发归档，百分百保真。
+</div>
 
-## 一分钟上手
+---
 
-1. 双击 [template.html](template.html)（用 Chrome/Edge 打开）——这就是一份能直接用的汇报模板；
-2. 按 `→` 翻页，`F` 全屏，`?` 看帮助；
-3. 按 `E` 进入编辑模式，点击文字直接改；
-4. 底部工具栏点「保存新版本」→ 下载出 `xxx_v02_日期.html`（内嵌修改记录）；
-5. 点「导出 PDF」→ 打印对话框选「另存为 PDF」→ 得到逐页 16:9 的 PDF。
+## Why replace PowerPoint?
 
-## 以后怎么用任何 AI agent 生成新汇报
+| | PowerPoint (.pptx) | agent-deck (.html) |
+|---|---|---|
+| **AI agents** | Binary black box; needs toolchains | Plain text — any agent reads & rewrites the whole file in one turn |
+| **Editing during the talk** | Exit slideshow → edit → restart | Press <kbd>E</kbd>, edit right on the slide |
+| **Version history** | Filename discipline, if you're lucky | Revision log embedded *inside* the file, auto-versioned filenames |
+| **Distribution** | Needs Office; fonts break | Any browser, fully offline; PDF snapshot is 100% faithful |
 
-打开 [PROMPT.md](PROMPT.md)，三种用法：
+## Features
 
-- **A 段**：从零生成（粘提示词 + 你的大纲，任何聊天型 agent 都行；组会/答辩/评审/课程展示任意场景）；
-- **B 段**：增量修改现有版本（日常最常用）；
-- **C 段**：从旧 PPT 迁移。
+- **Present** — 16:9 (1280×720), keyboard navigation, fullscreen, deep links (`#5`), toolbar **and cursor auto-hide** while presenting: the audience sees nothing but slides.
+- **Edit live** — press <kbd>E</kbd>: every slide becomes editable in place. Paste is forced to plain text; edits autosave to `localStorage`; reopening offers a restore banner; over-tall content gets a red warning before the PDF silently crops it.
+- **Versioned by design** — *Save new version* downloads `title_v02_date.html` with your change note appended to the embedded revision log. <kbd>Ctrl</kbd>+<kbd>S</kbd> is intercepted (the browser's native "save page" would silently lose your edits).
+- **One-click PDF** — `window.print()` with `@page` sized exactly like a PowerPoint 16:9 page. One slide per page, UI hidden, backgrounds preserved, no trailing blank page. Zero libraries.
+- **Agent-native** — a written contract ([PROMPT.md](PROMPT.md)) lets **any** AI agent (Claude, ChatGPT, Gemini, DeepSeek…) generate or modify compliant decks. The contract is the interface.
 
-生成后按 PROMPT.md 文末的 **60 秒验收清单**自测，不合格的条目原文丢回给 agent 让它修。
+## Quick start
 
-## 文件清单
+1. Grab [template.html](template.html) and open it in Chrome/Edge — that's already a usable deck;
+2. <kbd>→</kbd> to navigate, <kbd>F</kbd> for fullscreen, move the mouse to summon the toolbar;
+3. <kbd>E</kbd> to edit, then *Save new version* → you get `deck_v02_date.html` with the revision log inside;
+4. *Export PDF* → print dialog → *Save as PDF* → a page-perfect 16:9 PDF.
 
-| 文件 | 作用 |
+## Generate decks with any AI agent
+
+[PROMPT.md](PROMPT.md) ships three ready-to-paste prompts (an English translation lives in [PROMPT.en.md](PROMPT.en.md); **the Chinese contract is canonical**):
+
+- **A — from scratch**: paste the contract + your outline into any chat agent;
+- **B — incremental edits** (daily driver): send your current `vN.html` + the B prompt;
+- **C — migrate from PPT**: paste your old deck's text content.
+
+Then run the **60-second acceptance checklist** at the bottom of PROMPT.md. Any failed item goes straight back to the agent, verbatim.
+
+## What a slide looks like
+
+<div align="center"><img src="assets/slide-results.png" alt="results slide with an inline SVG chart" width="720"></div>
+
+Charts are inline SVG — editable in place, tiny file size, no bitmap screenshots.
+
+## Install as a Claude Code skill
+
+Copy [`skill/`](skill/) to `~/.claude/skills/agent-deck/` and say `/agent-deck`. The skill generates decks from the template, then self-verifies them (script integrity, navigation, autosave, serialization, zero external references) before handing you the file.
+
+## Repository layout
+
+| File | Role |
 |------|------|
-| [template.html](template.html) | 参考实现 + 可直接用的汇报模板（也是给 agent 看的"标准答案"） |
-| [PROMPT.md](PROMPT.md) | 万能提示词（跨 agent 的核心资产）+ 验收清单 |
-| [METHODOLOGY.md](METHODOLOGY.md) | 方法论全文：技术定案的理由、工作流、已知坑、扩展模块 |
-| [DESIGN.md](DESIGN.md) | 视觉规范（动 UI 前先读） |
-| [skill/SKILL.md](skill/SKILL.md) | Claude Code 本机 skill（复制到 `~/.claude/skills/agent-deck/` 即装） |
+| [template.html](template.html) | Reference implementation — also a ready-to-use deck and the "gold answer" you can show any agent |
+| [PROMPT.md](PROMPT.md) | The contract, three usage prompts, acceptance checklist (**canonical, Chinese**) |
+| [PROMPT.en.md](PROMPT.en.md) | English translation of the contract |
+| [METHODOLOGY.md](METHODOLOGY.md) | Full methodology: design rationale, workflow, known pitfalls (Chinese) |
+| [DESIGN.md](DESIGN.md) | Visual identity spec (Chinese) |
+| [skill/SKILL.md](skill/SKILL.md) | Claude Code skill |
 
-## 纪律（只记三条）
+## Three rules of discipline
 
-1. **文件才是真身**：浏览器里的自动暂存只是安全网，会后立刻「保存新版本」落盘；
-2. **零依赖是红线**：任何版本都不得引入 CDN / 外部字体 / 位图截图；
-3. **导 PDF 认准 Chrome/Edge**，勾「背景图形」、关「页眉和页脚」。
-
-## Roadmap
-
-- 英文版提示词契约（PROMPT.en.md）
-- 可选扩展模块的参考实现（演讲者备注 / 总览模式 / 计时器，见 METHODOLOGY §8）
+1. **The file is the truth** — browser autosave is only a safety net; always *Save new version* after the meeting;
+2. **Zero dependencies is a red line** — no CDN, no web fonts, no bitmap screenshots, ever;
+3. **Export PDF from Chrome/Edge** — check *Background graphics*, uncheck *Headers and footers*.
 
 ## License
 
-MIT — 随意使用、修改、传播；欢迎把它带进你的组会 / 团队周会 / 任何还在被 PPT 折磨的地方。
+[MIT](LICENSE) — take it to your lab meeting, your team review, or anywhere PowerPoint is still causing pain.
