@@ -4,7 +4,7 @@
 
 # agent-deck
 
-**One HTML file that presents, edits itself live, and exports a pixel-perfect PDF.**<br>
+**One HTML file that presents, edits itself live, and exports a clean 16:9 PDF.**<br>
 Slides for the AI-agent era — the deck *is* the source, the player, and the editor.
 
 English&nbsp;·&nbsp;[简体中文](README.zh-CN.md)&nbsp;·&nbsp;[한국어](README.ko.md)
@@ -27,7 +27,7 @@ English&nbsp;·&nbsp;[简体中文](README.zh-CN.md)&nbsp;·&nbsp;[한국어](RE
 | **AI agents** | Binary black box; needs toolchains | Plain text — any agent reads & rewrites the whole file in one turn |
 | **Editing during the talk** | Exit slideshow → edit → restart | Press <kbd>E</kbd>, edit right on the slide |
 | **Version history** | Filename discipline, if you're lucky | Revision log embedded *inside* the file, auto-versioned filenames |
-| **Distribution** | Needs Office; fonts break | Any browser, fully offline; PDF snapshot is 100% faithful |
+| **Distribution** | Needs Office; fonts break | Any browser, fully offline; PDF snapshot rendered by the browser's own print engine |
 
 ## Features
 
@@ -42,7 +42,7 @@ English&nbsp;·&nbsp;[简体中文](README.zh-CN.md)&nbsp;·&nbsp;[한국어](RE
 1. Grab [template.html](template.html) and open it in Chrome/Edge — that's already a usable deck;
 2. <kbd>→</kbd> to navigate, <kbd>F</kbd> for fullscreen, move the mouse to summon the toolbar;
 3. <kbd>E</kbd> to edit, then *Save new version* → you get `deck_v02_date.html` with the revision log inside;
-4. *Export PDF* → print dialog → *Save as PDF* → a page-perfect 16:9 PDF.
+4. *Export PDF* → print dialog → *Save as PDF* → a one-slide-per-page 16:9 PDF.
 
 ## Generate decks with any AI agent
 
@@ -59,6 +59,21 @@ Then run the **60-second acceptance checklist** at the bottom of PROMPT.md. Any 
 <div align="center"><img src="assets/slide-results.png" alt="results slide with an inline SVG chart" width="720"></div>
 
 Charts are inline SVG — editable in place, tiny file size, no bitmap screenshots.
+
+## Known limits (the honest section)
+
+- **PDF fidelity is per-machine.** Slides use a system font stack, so export the final PDF on your own machine with Chrome/Edge; another machine's fonts may shift line breaks slightly. What you see in *your* browser is what *your* PDF gets.
+- **Editing is text-level, not layout-level.** Perfect for changing words, numbers and bullets mid-meeting; this is not a WYSIWYG layout tool like PowerPoint.
+- **Single-user, single-file by design.** Versioning is built in; real-time collaboration is not.
+
+## When NOT to use agent-deck
+
+- Complex animations, transitions, embedded audio/video → PowerPoint / Keynote;
+- The venue explicitly requires a `.pptx` file → use a pptx pipeline;
+- Several people editing simultaneously → Google Slides or similar;
+- Poster-grade layout design → a design tool.
+
+agent-deck deliberately trades all of the above for single-file portability, zero dependencies, agent-writability and live editing. **That trade is the product.**
 
 ## Install as a Claude Code skill
 
