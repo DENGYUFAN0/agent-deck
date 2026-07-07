@@ -451,13 +451,34 @@ function autosave(){
   },400);
 }
 $('#deck').addEventListener('input',function(){if(editing){autosave();checkOverflow();}});
-/* 粘贴一律转纯文本，避免外来样式污染幻灯片 */
+/* 粘贴一律转纯文本，避免外来样式污染幻灯片（Selection/Range 标准 API；已废弃的 execCommand 仅作后备） */
 document.addEventListener('paste',function(e){
   if(!editing)return;
   if(!e.target.closest||!e.target.closest('.slide'))return;
   e.preventDefault();
   var text=(e.clipboardData||window.clipboardData).getData('text/plain');
-  document.execCommand('insertText',false,text);
+  if(!text)return;
+  var sel=window.getSelection();
+  if(sel&&sel.rangeCount){
+    var range=sel.getRangeAt(0);
+    range.deleteContents();
+    var frag=document.createDocumentFragment();
+    var last=null;
+    String(text).replace(/\r/g,'').split('\n').forEach(function(line,i){
+      if(i)frag.appendChild(document.createElement('br'));
+      if(line){last=document.createTextNode(line);frag.appendChild(last);}
+    });
+    if(!last)last=frag.lastChild;
+    range.insertNode(frag);
+    if(last){
+      range.setStartAfter(last);range.collapse(true);
+      sel.removeAllRanges();sel.addRange(range);
+    }
+    /* 手动插入不触发 input 事件，补发一次以驱动自动暂存与超高检测 */
+    e.target.closest('.slide').dispatchEvent(new Event('input',{bubbles:true}));
+  }else if(document.execCommand){
+    document.execCommand('insertText',false,text);
+  }
 });
 /* 打开文件时若发现未落盘的暂存，提示恢复 */
 function checkRestore(){

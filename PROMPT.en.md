@@ -31,7 +31,7 @@ Generate a single-file HTML slide deck for me (scenario: 【lab meeting / thesis
 3. In-browser editing (capability one)
    - Toggle edit mode with the E key or a toolbar button;
    - In edit mode every slide is contenteditable — click text to change it, with a clear visual cue (highlight border + status chip);
-   - Paste is intercepted and inserted as plain text (no foreign styling);
+   - Paste is intercepted and inserted as plain text via the standard Selection/Range API (newlines become br elements) — do not rely on the deprecated document.execCommand (fallback only); note that manual insertion fires no input event, so dispatch one on the slide afterwards to drive autosave;
    - All edits autosave to localStorage (400 ms debounce), key format "agent-deck:" + deck-id + ":v" + version;
    - On reopening, if the stash differs from the file content, show a top banner offering "Restore / Discard";
    - In edit mode, detect in real time whether the current slide's content overflows the slide height (overflow gets cropped in both presentation and PDF); warn visibly (red border + toast) and clear the flag on exiting edit mode and on serialization.
