@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>组会汇报模板 — agent-deck</title>
+<!-- agent-deck 契约元数据：deck-id 全局唯一（localStorage 暂存的命名空间）；deck-version 每次「保存新版本」自动 +1 -->
+<meta name="deck-id" content="agent-deck-template-20260707">
+<meta name="deck-version" content="1">
+<style>
+:root{
+  --bg:#ffffff;
+  --ink:#1a2332;
+  --muted:#5a6b7f;
+  --accent:#0f4c81;
+  --accent-2:#1a7f8e;
+  --line:#dde4ec;
+  --soft:#f4f7fa;
+}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:#20262e;
+  color:var(--ink);
+  font-family:-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC","Noto Sans CJK SC","Malgun Gothic",sans-serif;
+  overflow:hidden;
+}
+::selection{background:#cfe3f5;}
+
+/* ============ 舞台与幻灯片（设计稿 1280×720，16:9） ============ */
+#deck{
+  position:absolute;left:50%;top:50%;
+  width:1280px;height:720px;
+  margin:-360px 0 0 -640px;
+  transform-origin:50% 50%;
+}
+.slide{
+  position:absolute;inset:0;
+  width:1280px;height:720px;
+  background:var(--bg);
+  display:none;
+  flex-direction:column;
+  padding:56px 84px 96px;
+  overflow:hidden;
+  font-size:24px;line-height:1.55;
+}
+.slide.active{display:flex;}
+.slide:focus{outline:none;}
+
+/* ---- 幻灯片内部排版 ---- */
+.kicker{font-size:15px;letter-spacing:.22em;color:var(--accent-2);font-weight:700;margin:0 0 10px;}
+.slide h1{font-size:58px;line-height:1.25;margin:0 0 16px;}
+.slide h2{font-size:36px;margin:0 0 8px;}
+.slide h2::after{content:'';display:block;width:64px;height:4px;background:var(--accent);border-radius:2px;margin:14px 0 22px;}
+.slide h3{font-size:22px;color:var(--accent);margin:0 0 12px;}
+.slide ul,.slide ol{margin:0;padding-left:1.25em;}
+.slide li{margin:10px 0;}
+.slide .muted{color:var(--muted);}
+.slide small,.note{font-size:16px;color:var(--muted);}
+.cols{display:flex;gap:44px;flex:1;min-height:0;}
+.col{flex:1;min-width:0;}
+.box{background:var(--soft);border-left:5px solid var(--accent);border-radius:0 10px 10px 0;padding:14px 20px;font-size:20px;margin-top:24px;}
+.box.ask{margin-top:14px;font-size:19px;}
+.box b{color:var(--accent);}
+.tag{display:inline-block;font-size:13px;line-height:1;padding:5px 10px;border-radius:999px;font-weight:600;vertical-align:2px;margin-left:8px;}
+.tag.done{background:#e3f3e8;color:#1d7a43;}
+.tag.doing{background:#fff3d6;color:#8a6100;}
+.tag.risk{background:#fde5e0;color:#b3372a;}
+table{border-collapse:collapse;width:100%;font-size:18px;}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;}
+th{background:var(--soft);color:var(--accent);}
+.roadmap{display:flex;gap:14px;list-style:none;padding:0;margin:6px 0 30px;}
+.roadmap li{flex:1;background:var(--soft);border-radius:10px;border-top:5px solid var(--line);padding:16px 14px;font-size:16px;color:var(--muted);}
+.roadmap li b{display:block;font-size:17px;color:var(--ink);margin-bottom:6px;}
+.roadmap li.now{border-top-color:var(--accent);background:#e9f2f9;}
+.roadmap li.now b{color:var(--accent);}
+.slide-foot{
+  position:absolute;left:84px;right:84px;bottom:26px;
+  display:flex;justify-content:space-between;
+  font-size:13px;color:var(--muted);
+  border-top:1px solid var(--line);padding-top:10px;
+}
+
+/* ---- 封面 ---- */
+.slide.cover{justify-content:center;padding:64px 100px;}
+.cover::before{content:'';position:absolute;left:0;top:0;bottom:0;width:10px;background:linear-gradient(var(--accent),var(--accent-2));}
+.cover h1{font-size:60px;}
+.cover .subtitle{font-size:24px;color:var(--muted);margin:4px 0 44px;}
+.cover .meta{font-size:19px;border-top:1px solid var(--line);padding-top:22px;}
+.cover-hint{position:absolute;left:100px;bottom:30px;font-size:14px;color:var(--muted);}
+
+/* ============ 放映 UI（全部打印时隐藏） ============ */
+#toolbar{
+  position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+  display:flex;gap:4px;align-items:stretch;
+  background:rgba(18,24,32,.85);border-radius:999px;padding:7px 10px;
+  opacity:.3;transition:opacity .25s;z-index:50;
+}
+#toolbar:hover,body.editing #toolbar{opacity:1;}
+#toolbar button{
+  border:0;background:transparent;color:#dfe7f0;
+  font-size:13px;font-family:inherit;padding:7px 12px;border-radius:999px;
+  cursor:pointer;white-space:nowrap;
+}
+#toolbar button:hover{background:rgba(255,255,255,.14);}
+#toolbar button.on{background:var(--accent);color:#fff;}
+#toolbar .sep{width:1px;background:rgba(255,255,255,.2);margin:4px 3px;}
+#counter{position:fixed;right:16px;bottom:22px;font-size:12px;color:#9fb0c3;z-index:40;}
+#bar-wrap{position:fixed;left:0;bottom:0;width:100%;height:3px;z-index:40;}
+#bar{height:100%;width:0;background:var(--accent-2);transition:width .2s;}
+#editChip{
+  display:none;position:fixed;left:16px;top:16px;z-index:55;
+  background:#b3541e;color:#fff;font-size:12px;padding:5px 12px;border-radius:999px;
+}
+body.editing #editChip{display:block;}
+body.editing .slide.active{box-shadow:inset 0 0 0 3px var(--accent-2);}
+#dirty{
+  position:fixed;left:16px;bottom:22px;z-index:40;
+  background:rgba(179,84,30,.92);color:#fff;font-size:12px;padding:5px 12px;border-radius:999px;
+}
+#toast{
+  position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:60;
+  background:rgba(18,24,32,.94);color:#fff;font-size:13px;
+  padding:10px 18px;border-radius:10px;max-width:72vw;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+#toast.show{opacity:1;}
+#restore{
+  position:fixed;top:0;left:0;right:0;z-index:70;
+  display:flex;gap:14px;align-items:center;justify-content:center;
+  background:#fff7e6;color:#7a4a12;border-bottom:1px solid #eadfc8;
+  padding:10px 16px;font-size:13px;
+}
+#restore[hidden]{display:none;}
+#restore button{border:1px solid #d9b98a;background:#fff;color:#7a4a12;border-radius:8px;padding:4px 12px;font-size:13px;cursor:pointer;font-family:inherit;}
+#restore button:hover{background:#f7ecd8;}
+.panel{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:65;
+  width:580px;max-height:72vh;overflow:auto;
+  background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.4);
+  padding:26px 30px;font-size:14px;line-height:1.7;
+}
+.panel[hidden]{display:none;}
+.panel h4{margin:18px 0 6px;color:var(--accent);font-size:15px;}
+.panel h4:first-of-type{margin-top:0;}
+.panel .close{position:absolute;right:14px;top:10px;border:0;background:none;font-size:22px;color:var(--muted);cursor:pointer;}
+.panel kbd{background:var(--soft);border:1px solid var(--line);border-radius:5px;padding:1px 7px;font-size:12px;font-family:Consolas,monospace;}
+.panel .keys{display:grid;grid-template-columns:auto 1fr;gap:5px 16px;}
+.panel .rev{border-bottom:1px solid var(--line);padding:10px 0;}
+.panel .rev b{color:var(--accent);margin-right:10px;}
+.panel .rev span{color:var(--muted);font-size:12px;}
+.panel .rev p{margin:4px 0 0;}
+
+/* ============ 打印（导出 PDF 的核心） ============ */
+@media print{
+  @page{size:1280px 720px;margin:0;}
+  html,body{overflow:visible;height:auto;background:#fff;}
+  #toolbar,#counter,#bar-wrap,#toast,#restore,#editChip,#dirty,.panel,.cover-hint{display:none !important;}
+  #deck{position:static;margin:0;width:auto;height:auto;transform:none !important;}
+  .slide{position:relative;inset:auto;display:flex !important;page-break-after:always;break-after:page;}
+  .slide:last-of-type{page-break-after:auto;break-after:auto;}
+}
+</style>
+</head>
+<body>
+
+<div id="deck">
+
+  <!-- 1 · 封面 -->
+  <section class="slide cover active">
+    <p class="kicker">博士组会汇报 · 第【N】次</p>
+    <h1>【在此填写本次汇报题目】</h1>
+    <p class="subtitle">【一句话副标题：当前研究阶段 / 本次汇报重点】</p>
+    <p class="meta">汇报人：DENG YUFAN　｜　导师：【导师姓名】　｜　【2026-XX-XX】</p>
+    <div class="cover-hint">→ / 空格 翻页　·　E 编辑　·　？帮助与导出说明</div>
+  </section>
+
+  <!-- 2 · 进展总览 -->
+  <section class="slide">
+    <p class="kicker">01 · 进展总览</p>
+    <h2>本周完成情况</h2>
+    <div class="cols">
+      <div class="col">
+        <h3>上周承诺</h3>
+        <ul>
+          <li>【完成文献综述第 3 节初稿】<span class="tag done">完成</span></li>
+          <li>【跑通基线模型】<span class="tag doing">80%</span></li>
+          <li>【联系问卷发放渠道】<span class="tag risk">受阻</span></li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>计划外产出 / 变化</h3>
+        <ul>
+          <li>【新读到 XX (2025)，与假设 H2 直接相关，已纳入综述】</li>
+          <li>【数据源 A 接口变更，已切换到数据源 B】</li>
+        </ul>
+      </div>
+    </div>
+    <div class="box">一句话总结：【本周最重要的一个进展或结论，让导师 10 秒抓住重点】</div>
+    <div class="slide-foot"><span>【研究题目缩写】 · 组会汇报</span><span class="foot-num"></span></div>
+  </section>
+
+  <!-- 3 · 研究定位 -->
+  <section class="slide">
+    <p class="kicker">02 · 研究定位</p>
+    <h2>当前处于研究路线图的哪一步</h2>
+    <ol class="roadmap">
+      <li><b>① 文献与理论</b>已完成</li>
+      <li><b>② 研究设计</b>已完成</li>
+      <li class="now"><b>③ 数据收集</b>进行中：【问卷第一轮】</li>
+      <li><b>④ 分析与写作</b>未开始</li>
+      <li><b>⑤ 投稿 / 答辩</b>未开始</li>
+    </ol>
+    <ul>
+      <li>研究问题（RQ）：【一句话写清楚你的研究问题】</li>
+      <li>本阶段目标：【本阶段要交付什么、什么时候交付】</li>
+      <li>与上次组会的衔接：【上次老师提的意见 → 本次如何回应】</li>
+    </ul>
+    <div class="slide-foot"><span>【研究题目缩写】 · 组会汇报</span><span class="foot-num"></span></div>
+  </section>
+
+  <!-- 4 · 方法与数据 -->
+  <section class="slide">
+    <p class="kicker">03 · 方法与数据</p>
+    <h2>【方法名称 / 数据来源】</h2>
+    <div class="cols">
+      <div class="col">
+        <h3>方法要点</h3>
+        <ul>
+          <li>【核心方法一句话】</li>
+          <li>【关键设定 / 参数 / 变量】</li>
+          <li>【与备选方法相比为什么选它】</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>数据情况</h3>
+        <table>
+          <tr><th>数据集</th><th>来源</th><th>规模</th><th>状态</th></tr>
+          <tr><td>【问卷 A】</td><td>【线上发放】</td><td>【N=200】</td><td>【回收中】</td></tr>
+          <tr><td>【访谈 B】</td><td>【实地】</td><td>【n=12】</td><td>【已转录】</td></tr>
+        </table>
+      </div>
+    </div>
+    <div class="slide-foot"><span>【研究题目缩写】 · 组会汇报</span><span class="foot-num"></span></div>
+  </section>
+
+  <!-- 5 · 核心结果 -->
+  <section class="slide">
+    <p class="kicker">04 · 本周核心结果</p>
+    <h2>【用结论作标题，例：方案 D 显著优于三个基线】</h2>
+    <div class="cols">
+      <div class="col">
+        <svg viewBox="0 0 620 340" role="img" aria-label="示例柱状图">
+          <g stroke="#dde4ec" stroke-width="1">
+            <line x1="70" y1="40"  x2="590" y2="40"/>
+            <line x1="70" y1="120" x2="590" y2="120"/>
+            <line x1="70" y1="200" x2="590" y2="200"/>
+            <line x1="70" y1="280" x2="590" y2="280"/>
+          </g>
+          <g fill="#5a6b7f" font-size="14">
+            <text x="60" y="285" text-anchor="end">0</text>
+            <text x="60" y="205" text-anchor="end">33</text>
+            <text x="60" y="125" text-anchor="end">67</text>
+            <text x="60" y="45"  text-anchor="end">100</text>
+          </g>
+          <rect x="110" y="131" width="70" height="149" rx="4" style="fill:#b9c9d9"/>
+          <rect x="230" y="110" width="70" height="170" rx="4" style="fill:#b9c9d9"/>
+          <rect x="350" y="117" width="70" height="163" rx="4" style="fill:#b9c9d9"/>
+          <rect x="470" y="81"  width="70" height="199" rx="4" style="fill:var(--accent)"/>
+          <g fill="#1a2332" font-size="16" font-weight="600" text-anchor="middle">
+            <text x="145" y="122">62</text>
+            <text x="265" y="101">71</text>
+            <text x="385" y="108">68</text>
+            <text x="505" y="72">83</text>
+          </g>
+          <g fill="#5a6b7f" font-size="15" text-anchor="middle">
+            <text x="145" y="308">基线</text>
+            <text x="265" y="308">方案 A</text>
+            <text x="385" y="308">方案 B</text>
+            <text x="505" y="308">本文方法</text>
+          </g>
+        </svg>
+        <p class="note">图 1：【指标名称】对比（示例数据）</p>
+      </div>
+      <div class="col">
+        <div class="box" style="margin-top:0">结论：【一句话结论，含数字】</div>
+        <ul style="margin-top:22px">
+          <li>【支撑点 1：差异来自哪里】</li>
+          <li>【支撑点 2：稳健性 / 局限】</li>
+        </ul>
+        <p class="note" style="margin-top:26px">提示：图表让 AI agent 用内联 SVG 重画你的真实数据，不要贴截图——截图无法前端编辑，文件也会变大。</p>
+      </div>
+    </div>
+    <div class="slide-foot"><span>【研究题目缩写】 · 组会汇报</span><span class="foot-num"></span></div>
+  </section>
+
+  <!-- 6 · 问题与讨论 -->
+  <section class="slide">
+    <p class="kicker">05 · 问题与讨论</p>
+    <h2>想请老师给意见的 3 件事</h2>
+    <div class="box ask"><b>1 · 方向类</b>　【例：样本量 200 够不够支撑 SEM？】我的倾向：【先跑预检验，不够再扩样】</div>
+    <div class="box ask"><b>2 · 资源类</b>　【例：问卷发放渠道受阻，是否可借用课题组渠道？】我的倾向：【…】</div>
+    <div class="box ask"><b>3 · 优先级类</b>　【例：先补实验还是先写作？】我的倾向：【…】</div>
+    <p class="note" style="margin-top:20px">开会时老师的意见可以按 <b>E</b> 进入编辑模式直接写在本页，会后「保存新版本」即存档。</p>
+    <div class="slide-foot"><span>【研究题目缩写】 · 组会汇报</span><span class="foot-num"></span></div>
+  </section>
+
+  <!-- 7 · 下周计划 -->
+  <section class="slide">
+    <p class="kicker">06 · 下周计划</p>
+    <h2>下周要做的事</h2>
+    <ul>
+      <li>【事项 1 —— 可验证的完成标准】</li>
+      <li>【事项 2 —— 可验证的完成标准】</li>
+      <li>【事项 3 —— 可验证的完成标准】</li>
+    </ul>
+    <ul style="margin-top:18px">
+      <li class="muted">风险预案：【如果 X 不成，退路是 Y】</li>
+    </ul>
+    <div class="box">需要的支持：【设备 / 数据 / 经费 / 老师签字……没有就删掉这行】</div>
+    <div class="slide-foot"><span>【研究题目缩写】 · 组会汇报</span><span class="foot-num"></span></div>
+  </section>
+
+</div>
+
+<!-- ============ 放映 UI ============ -->
+<div id="restore" hidden>
+  <span>检测到上次在浏览器里改过、但还没保存成文件的内容（<b id="restore-time"></b>）。</span>
+  <button id="restore-yes">恢复修改</button>
+  <button id="restore-no">丢弃</button>
+</div>
+<div id="editChip">编辑模式 · 点击文字直接修改 · 改动自动暂存</div>
+<div id="dirty" hidden>有未落盘的修改 · 记得「保存新版本」</div>
+<div id="toast"></div>
+
+<div id="toolbar">
+  <button id="prevBtn" title="上一页 (←)">◀</button>
+  <button id="nextBtn" title="下一页 (→)">▶</button>
+  <span class="sep"></span>
+  <button id="editBtn" title="编辑模式 (E)">编辑</button>
+  <button id="saveBtn" title="把当前修改保存为新版本 HTML 文件">保存新版本</button>
+  <button id="histBtn" title="查看内嵌的版本记录">版本</button>
+  <span class="sep"></span>
+  <button id="pdfBtn" title="导出 PDF（打印对话框中选「另存为 PDF」）">导出 PDF</button>
+  <button id="fullBtn" title="全屏 (F)">全屏</button>
+  <button id="helpBtn" title="帮助 (?)">?</button>
+</div>
+<div id="counter"></div>
+<div id="bar-wrap"><div id="bar"></div></div>
+
+<div class="panel" id="help" hidden>
+  <button class="close" data-close="help">×</button>
+  <h4>快捷键</h4>
+  <div class="keys">
+    <span><kbd>→</kbd> <kbd>空格</kbd> / <kbd>←</kbd></span><span>下一页 / 上一页</span>
+    <span><kbd>Home</kbd> / <kbd>End</kbd></span><span>第一页 / 最后一页</span>
+    <span><kbd>F</kbd></span><span>全屏放映</span>
+    <span><kbd>E</kbd></span><span>进入 / 退出编辑模式</span>
+    <span><kbd>?</kbd> / <kbd>Esc</kbd></span><span>打开帮助 / 关闭浮层</span>
+  </div>
+  <h4>现场编辑与记录</h4>
+  <p>按 <kbd>E</kbd> 进入编辑模式后，点击任意文字直接修改（粘贴自动转纯文本）。改动会自动暂存在浏览器里，误关页面不丢；但暂存只是安全网，<b>「保存新版本」下载的 HTML 文件才是唯一可信的存档</b>。</p>
+  <h4>保存新版本</h4>
+  <p>点「保存新版本」→ 填一句修改说明 → 自动下载 <code>标题_v02_日期.html</code>。版本号自动 +1，修改说明和时间写进文件内嵌的版本记录（点「版本」可查看）。之后请改用新文件，旧文件留作历史。</p>
+  <h4>导出 PDF</h4>
+  <p>点「导出 PDF」→ 在打印对话框中：目标选 <b>另存为 PDF</b>；勾选 <b>背景图形</b>；关闭 <b>页眉和页脚</b>。得到逐页 16:9 的 PDF，每张幻灯片恰好一页。</p>
+  <p class="rev" style="border:0"><span>请用 Chrome / Edge 打开本文件。PDF 是定稿快照，编辑能力只存在于 HTML 里。</span></p>
+</div>
+
+<div class="panel" id="history" hidden>
+  <button class="close" data-close="history">×</button>
+  <h4>版本记录</h4>
+  <div id="history-body"></div>
+</div>
+
+<!-- agent-deck 契约：版本记录内嵌于此，随「保存新版本」追加 -->
+<script type="application/json" id="revision-log">[]</script>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s);};
+var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
+var slides=$$('.slide');
+var deckId=($('meta[name="deck-id"]')||{content:'deck'}).content;
+function ver(){return parseInt($('meta[name="deck-version"]').content,10)||1;}
+function LS(){return 'agent-deck:'+deckId+':v'+ver();}
+var cur=0,editing=false;
+
+/* ---------- 放映 ---------- */
+function show(i){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach(function(s,k){s.classList.toggle('active',k===cur);});
+  $('#counter').textContent=(cur+1)+' / '+slides.length;
+  $('#bar').style.width=((cur+1)/slides.length*100)+'%';
+  if(location.hash!=='#'+(cur+1))history.replaceState(null,'','#'+(cur+1));
+}
+function fit(){
+  var s=Math.min(innerWidth/1280,innerHeight/720);
+  $('#deck').style.transform='scale('+s+')';
+}
+function fillFoot(){
+  slides.forEach(function(s,i){
+    var n=s.querySelector('.foot-num');
+    if(n)n.textContent=(i+1)+' / '+slides.length;
+  });
+}
+function toggleFull(){
+  if(document.fullscreenElement)document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(function(){});
+}
+
+/* ---------- 编辑模式 ---------- */
+function toggleEdit(force){
+  var on=(force===undefined)?!editing:!!force;
+  if(on===editing)return;
+  editing=on;
+  document.body.classList.toggle('editing',editing);
+  slides.forEach(function(s){
+    if(editing)s.setAttribute('contenteditable','true');
+    else s.removeAttribute('contenteditable');
+  });
+  $('#editBtn').classList.toggle('on',editing);
+  if(editing)toast('编辑模式：点击文字直接修改；按 E 或再点「编辑」退出',3200);
+}
+/* 自动暂存到 localStorage（防误关；文件才是真身） */
+var saveTimer=null;
+function autosave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(function(){
+    try{
+      localStorage.setItem(LS(),JSON.stringify({
+        t:Date.now(),
+        slides:slides.map(function(s){return s.innerHTML;})
+      }));
+      $('#dirty').hidden=false;
+    }catch(e){/* 隐私模式等场景写不进去：忽略，仍可「保存新版本」落盘 */}
+  },400);
+}
+$('#deck').addEventListener('input',function(){if(editing)autosave();});
+/* 粘贴一律转纯文本，避免外来样式污染幻灯片 */
+document.addEventListener('paste',function(e){
+  if(!editing)return;
+  if(!e.target.closest||!e.target.closest('.slide'))return;
+  e.preventDefault();
+  var text=(e.clipboardData||window.clipboardData).getData('text/plain');
+  document.execCommand('insertText',false,text);
+});
+/* 打开文件时若发现未落盘的暂存，提示恢复 */
+function checkRestore(){
+  var d=null;
+  try{d=JSON.parse(localStorage.getItem(LS())||'null');}catch(e){}
+  if(!d||!Array.isArray(d.slides)||d.slides.length!==slides.length)return;
+  var differs=d.slides.some(function(h,i){return h!==slides[i].innerHTML;});
+  if(!differs){try{localStorage.removeItem(LS());}catch(e){}return;}
+  $('#restore-time').textContent=new Date(d.t).toLocaleString();
+  $('#restore').hidden=false;
+  $('#restore-yes').onclick=function(){
+    d.slides.forEach(function(h,i){slides[i].innerHTML=h;});
+    fillFoot();
+    $('#restore').hidden=true;$('#dirty').hidden=false;
+    toast('已恢复上次修改；确认无误后请点「保存新版本」把修改落盘',4200);
+  };
+  $('#restore-no').onclick=function(){
+    try{localStorage.removeItem(LS());}catch(e){}
+    $('#restore').hidden=true;
+  };
+}
+
+/* ---------- 保存新版本（自序列化落盘，唯一可信存档） ---------- */
+function pad(n){return String(n).padStart(2,'0');}
+function serialize(){
+  toggleEdit(false);
+  $$('.panel').forEach(function(p){p.hidden=true;});
+  $('#restore').hidden=true;$('#dirty').hidden=true;
+  $('#toast').classList.remove('show');
+  return '<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+}
+function saveVersion(){
+  var note=prompt('这一版改了什么？（写入文件内的版本记录，可留空）','');
+  if(note===null)return;
+  var newVer=ver()+1;
+  var logEl=$('#revision-log');
+  var log=[];
+  try{log=JSON.parse(logEl.textContent.trim()||'[]');}catch(e){}
+  var now=new Date();
+  log.push({
+    v:newVer,
+    time:now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes()),
+    note:note.trim()
+  });
+  /* 把小于号替换为 Unicode 转义序列，防止修改说明里出现 script 结束标签、截断文档 */
+  logEl.textContent=JSON.stringify(log).replace(/</g,'\\u003c');
+  var oldKey=LS();
+  $('meta[name="deck-version"]').setAttribute('content',String(newVer));
+  var base=(document.title.split('—')[0]||'slides').trim().replace(/[\\\/:*?"<>|\s]+/g,'_')||'slides';
+  var fname=base+'_v'+pad(newVer)+'_'+now.getFullYear()+pad(now.getMonth()+1)+pad(now.getDate())+'.html';
+  var blob=new Blob([serialize()],{type:'text/html;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=fname;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
+  try{localStorage.removeItem(oldKey);}catch(e){}
+  toast('已导出 '+fname+'（默认在「下载」文件夹）。之后请改用新文件，本文件留作历史。',6000);
+}
+
+/* ---------- 导出 PDF ---------- */
+function exportPDF(){
+  toggleEdit(false);
+  $$('.panel').forEach(function(p){p.hidden=true;});
+  toast('打印对话框中：目标选「另存为 PDF」，勾选「背景图形」，关闭「页眉和页脚」',4000);
+  setTimeout(function(){window.print();},300);
+}
+
+/* ---------- 浮层 ---------- */
+var toastTimer=null;
+function toast(msg,ms){
+  var el=$('#toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},ms||3000);
+}
+function togglePanel(id){
+  var el=document.getElementById(id);
+  var willShow=el.hidden;
+  $$('.panel').forEach(function(p){p.hidden=true;});
+  el.hidden=!willShow;
+}
+function showHistory(){
+  var log=[];
+  try{log=JSON.parse($('#revision-log').textContent.trim()||'[]');}catch(e){}
+  var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  $('#history-body').innerHTML=log.length
+    ?log.slice().reverse().map(function(r){
+        return '<div class="rev"><b>v'+r.v+'</b><span>'+esc(r.time)+'</span><p>'+(esc(r.note)||'（未填写修改说明）')+'</p></div>';
+      }).join('')
+    :'<p class="muted">当前为 v'+ver()+'，还没有版本记录。第一次点「保存新版本」后，这里会记录每一版的修改说明。</p>';
+  togglePanel('history');
+}
+
+/* ---------- 键盘 ---------- */
+document.addEventListener('keydown',function(e){
+  if(e.target.isContentEditable)return;
+  var tag=e.target.tagName||'';
+  if(tag==='INPUT'||tag==='TEXTAREA')return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  switch(e.key){
+    case 'ArrowRight':case 'ArrowDown':case ' ':case 'PageDown':
+      e.preventDefault();show(cur+1);break;
+    case 'ArrowLeft':case 'ArrowUp':case 'PageUp':
+      e.preventDefault();show(cur-1);break;
+    case 'Home':show(0);break;
+    case 'End':show(slides.length-1);break;
+    case 'f':case 'F':toggleFull();break;
+    case 'e':case 'E':toggleEdit();break;
+    case '?':togglePanel('help');break;
+    case 'Escape':$$('.panel').forEach(function(p){p.hidden=true;});break;
+  }
+});
+
+/* ---------- 接线与初始化 ---------- */
+$('#prevBtn').onclick=function(){show(cur-1);};
+$('#nextBtn').onclick=function(){show(cur+1);};
+$('#editBtn').onclick=function(){toggleEdit();};
+$('#saveBtn').onclick=saveVersion;
+$('#histBtn').onclick=showHistory;
+$('#pdfBtn').onclick=exportPDF;
+$('#fullBtn').onclick=toggleFull;
+$('#helpBtn').onclick=function(){togglePanel('help');};
+$$('[data-close]').forEach(function(b){
+  b.onclick=function(){document.getElementById(b.dataset.close).hidden=true;};
+});
+/* 点完按钮移除焦点，避免随后按空格/回车误触按钮 */
+$('#toolbar').addEventListener('click',function(e){
+  if(e.target.tagName==='BUTTON')e.target.blur();
+});
+window.addEventListener('resize',fit);
+window.addEventListener('hashchange',function(){
+  var n=parseInt(location.hash.slice(1),10);
+  if(n)show(n-1);
+});
+fillFoot();
+var start=parseInt(location.hash.slice(1),10);
+show(start?start-1:0);
+fit();
+checkRestore();
+/* 对外 API：方便自动化与其他 agent 驱动 */
+window.deck={
+  go:function(n){show(n-1);},
+  next:function(){show(cur+1);},
+  prev:function(){show(cur-1);},
+  toggleEdit:toggleEdit,
+  saveVersion:saveVersion,
+  exportPDF:exportPDF,
+  serialize:serialize,
+  version:ver
+};
+})();
+</script>
+</body>
+</html>
