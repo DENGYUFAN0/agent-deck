@@ -1,0 +1,24 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  conformance:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install checker deps
+        working-directory: checker
+        run: npm install
+      - name: Install Chromium
+        working-directory: checker
+        run: npx playwright install --with-deps chromium
+      - name: Run conformance checker on template
+        working-directory: checker
+        run: node check.mjs ../template.html

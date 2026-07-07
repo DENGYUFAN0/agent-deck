@@ -59,6 +59,12 @@ Generate a single-file HTML slide deck for me (scenario: 【lab meeting / thesis
    - A "?" help overlay: keyboard shortcuts, editing & saving explanation, and the three PDF print-dialog settings;
    - Expose a window.deck object (go/next/prev/toggleEdit/saveVersion/exportPDF/serialize/version) for future automation.
 
+7. Machine-checkable anchors (required for automated conformance checking)
+   - Fixed ids: toolbar, counter (page counter), restore (restore banner), revision-log;
+   - Fixed classes: .slide, .slide.active (current), body.editing (edit mode), .slide.overflow (over-tall warning);
+   - The meta names (deck-id / deck-version), the localStorage prefix (agent-deck:) and the window.deck API signature as specified above;
+   - Keep these anchors intact and the repository's conformance checker (checker/check.mjs) can run the full acceptance checklist against any deck automatically.
+
 【II. Design requirements】
 
 - Academic, light theme: white background #ffffff, body text #1a2332, primary #0f4c81 (deep blue), secondary #1a7f8e (teal), light line #dde4ec, light fill #f4f7fa; restrained and clean, no flashy animations;
@@ -78,7 +84,7 @@ Build the slides from this outline (where I left gaps, fill in conventional plac
 
 【IV. Self-check after generation】
 
-Re-check items 1–6 of Part I one by one and output a self-check table at the end of your reply (tick each item or explain the deviation). Do not drop any capability to "simplify the implementation".
+Re-check items 1–7 of Part I one by one and output a self-check table at the end of your reply (tick each item or explain the deviation). Do not drop any capability to "simplify the implementation".
 ```
 
 ---

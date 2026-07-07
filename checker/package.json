@@ -1,0 +1,13 @@
+{
+  "name": "agent-deck-checker",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "agent-deck 合规校验器：把验收清单自动化，任何 agent 生成的 deck 都能被机器验收。",
+  "scripts": {
+    "check": "node check.mjs ../template.html"
+  },
+  "dependencies": {
+    "playwright": "^1.49.0"
+  }
+}

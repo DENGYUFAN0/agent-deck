@@ -3,6 +3,7 @@
 > 用法：复制下面代码块里的整段文字，发给任何一家 AI agent（Claude / ChatGPT / Gemini / DeepSeek / Kimi …），把【】里的内容换成你的。
 > 如果对方 agent 能接收文件，把 `template.html` 一起发给它并加一句「参照此文件的实现方式」，保真度最高。
 > 生成后按文末「验收清单」自测 60 秒，不合格就把不合格的条目原文丢回给 agent 让它修。
+> 也可以机器验收：`cd checker && npm install && node check.mjs 你的文件.html`（仓库自带合规校验器，逐条自动跑清单）。
 
 ---
 
@@ -57,6 +58,12 @@
    - 「?」帮助浮层：列出快捷键、编辑与保存的说明、导出 PDF 的打印设置三件事；
    - 暴露 window.deck 对象（go/next/prev/toggleEdit/saveVersion/exportPDF/serialize/version），方便日后自动化。
 
+7. 机器验收锚点（供自动化校验，缺一即无法机检）
+   - 固定 id：toolbar（工具栏）、counter（页码）、restore（恢复横幅）、revision-log（版本记录）；
+   - 固定类名：幻灯片 .slide、当前页 .slide.active、编辑态 body.editing、超高警告 .slide.overflow；
+   - meta 名（deck-id / deck-version）、localStorage 前缀（agent-deck:）、window.deck API 签名均如上文；
+   - 守住这些锚点，本仓库的合规校验器（checker/check.mjs）就能对任何 deck 自动跑完验收清单。
+
 【二、设计要求】
 
 - 学术风格，浅色底：白底 #ffffff，正文 #1a2332，主色 #0f4c81（深蓝），辅色 #1a7f8e（青），浅灰线 #dde4ec，浅灰底 #f4f7fa；克制、干净，无花哨动画；
@@ -76,7 +83,7 @@
 
 【四、生成后自查】
 
-逐条核对上面第一部分的 1–6，并在回复末尾输出一份自查表（每条打钩或说明偏差）。不要省略任何一条能力来"简化实现"。
+逐条核对上面第一部分的 1–7，并在回复末尾输出一份自查表（每条打钩或说明偏差）。不要省略任何一条能力来"简化实现"。
 ```
 
 ---
