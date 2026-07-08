@@ -71,11 +71,16 @@ Generate a single-file HTML slide deck for me (scenario: 【lab meeting / thesis
    - The S key or a "Presenter" toolbar button opens a popup presenter view: current notes, next-slide preview, page counter, elapsed timer; the popup's DOM is driven entirely by the main window — write no script inside the popup (avoids F2 script truncation);
    - The overflow check must temporarily exclude note blocks to avoid false positives; serialization strips empty note blocks to keep archives clean.
 
+9. L2 expressiveness modules (all optional, scenario-dependent; before implementing any, it must pass three questions: still a single offline file / degrades in PDF to a predictable static rendering / edit mode unharmed)
+   - Interactive charts (recommended first): SVG shapes carry data-label / data-value attributes; while presenting, hovering shows a "label: value" tooltip (one reusable fixed-position element, id=charttip); hovering is disabled in edit mode; the tooltip is hidden in print, and static values must be printed on the chart as the PDF fallback;
+   - Other candidates (section map / progressive reveal / time-budget alert / overview mode / annotation layer) — see the module catalog and its three-question answers in METHODOLOGY §8.
+
 【II. Design requirements】
 
 - Academic, light theme: white background #ffffff, body text #1a2332, primary #0f4c81 (deep blue), secondary #1a7f8e (teal), light line #dde4ec, light fill #f4f7fa; restrained and clean, no flashy animations;
 - Font stack: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", "Malgun Gothic", sans-serif (no external fonts; covers Latin/Chinese/Korean);
 - Body text ≥ 22px (at the 1280×720 design size) for projector readability; restrained information density — one key point per slide;
+- Visual asset priority: CSS / inline SVG vectors → tiny KB-scale bitmaps as base64 → photos as a last resort (compressed, base64) — asset forms must be compatible with the single-file constraint;
 - Uniform section headers: a small letter-spaced kicker (e.g. "01 · PROGRESS") + a large title + a short primary-color underline.
 
 【III. Content】
