@@ -70,7 +70,7 @@ Any deck from any agent that honors the contract's machine-checkable anchors (co
 
 <div align="center"><img src="assets/slide-results.png" alt="results slide with an inline SVG chart" width="720"></div>
 
-Charts are inline SVG — editable in place, tiny file size, no bitmap screenshots.
+Charts are inline SVG — editable in place, tiny file size, no bitmap screenshots. While presenting, hover a bar to read its exact value (disabled in edit mode; the PDF falls back to the static numbers printed on the chart).
 
 ## Known limits (the honest section)
 

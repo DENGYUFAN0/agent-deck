@@ -72,7 +72,7 @@ node check.mjs 你的文件.html
 
 <div align="center"><img src="assets/slide-results.png" alt="内联 SVG 图表的结果页" width="720"></div>
 
-图表一律内联 SVG——可当场编辑、文件极小、不贴位图截图。
+图表一律内联 SVG——可当场编辑、文件极小、不贴位图截图。放映时悬停柱子可看精确值（编辑模式自动停用；PDF 以柱顶静态数字兜底）。
 
 ## 已知限制（诚实版）
 

@@ -139,6 +139,16 @@ body.editing .slide.active.overflow{box-shadow:inset 0 0 0 3px #e05b4d;}
   opacity:0;pointer-events:none;transition:opacity .25s;
 }
 #toast.show{opacity:1;}
+/* ---- L2 模块 · 交互式图表：放映态悬停查值（编辑模式停用；PDF 降级=图上静态数值） ---- */
+#charttip{
+  position:fixed;z-index:58;pointer-events:none;white-space:nowrap;
+  background:rgba(18,24,32,.94);color:#fff;font-size:13px;
+  padding:6px 11px;border-radius:8px;
+  opacity:0;transition:opacity .12s;
+}
+#charttip.show{opacity:1;}
+body:not(.editing) .slide svg [data-value]{cursor:crosshair;}
+body:not(.editing) .slide svg [data-value]:hover{opacity:.82;}
 #restore{
   position:fixed;top:0;left:0;right:0;z-index:70;
   display:flex;gap:14px;align-items:center;justify-content:center;
@@ -169,7 +179,7 @@ body.editing .slide.active.overflow{box-shadow:inset 0 0 0 3px #e05b4d;}
 @media print{
   @page{size:1280px 720px;margin:0;}
   html,body{overflow:visible;height:auto;background:#fff;}
-  #toolbar,#counter,#bar-wrap,#toast,#restore,#editChip,#dirty,.panel,.cover-hint,aside.notes{display:none !important;}
+  #toolbar,#counter,#bar-wrap,#toast,#restore,#editChip,#dirty,.panel,.cover-hint,aside.notes,#charttip{display:none !important;}
   #deck{position:static;margin:0;width:auto;height:auto;transform:none !important;}
   .slide{position:relative;inset:auto;display:flex !important;box-shadow:none !important;page-break-after:always;break-after:page;}
   .slide:last-of-type{page-break-after:auto;break-after:auto;}
@@ -278,10 +288,10 @@ body.editing .slide.active.overflow{box-shadow:inset 0 0 0 3px #e05b4d;}
             <text x="60" y="125" text-anchor="end">67</text>
             <text x="60" y="45"  text-anchor="end">100</text>
           </g>
-          <rect x="110" y="131" width="70" height="149" rx="4" style="fill:#b9c9d9"/>
-          <rect x="230" y="110" width="70" height="170" rx="4" style="fill:#b9c9d9"/>
-          <rect x="350" y="117" width="70" height="163" rx="4" style="fill:#b9c9d9"/>
-          <rect x="470" y="81"  width="70" height="199" rx="4" style="fill:var(--accent)"/>
+          <rect x="110" y="131" width="70" height="149" rx="4" style="fill:#b9c9d9" data-label="基线" data-value="62"/>
+          <rect x="230" y="110" width="70" height="170" rx="4" style="fill:#b9c9d9" data-label="方案 A" data-value="71"/>
+          <rect x="350" y="117" width="70" height="163" rx="4" style="fill:#b9c9d9" data-label="方案 B" data-value="68"/>
+          <rect x="470" y="81"  width="70" height="199" rx="4" style="fill:var(--accent)" data-label="本文方法" data-value="83"/>
           <g fill="#1a2332" font-size="16" font-weight="600" text-anchor="middle">
             <text x="145" y="122">62</text>
             <text x="265" y="101">71</text>
@@ -303,7 +313,7 @@ body.editing .slide.active.overflow{box-shadow:inset 0 0 0 3px #e05b4d;}
           <li>【支撑点 1：差异来自哪里】</li>
           <li>【支撑点 2：稳健性 / 局限】</li>
         </ul>
-        <p class="note" style="margin-top:26px">提示：图表让 AI agent 用内联 SVG 重画你的真实数据，不要贴截图——截图无法前端编辑，文件也会变大。</p>
+        <p class="note" style="margin-top:26px">提示：图表让 AI agent 用内联 SVG 重画你的真实数据，不要贴截图——截图无法前端编辑，文件也会变大。放映时鼠标悬停柱子可看精确值（编辑模式自动停用；PDF 以柱顶静态数字呈现）。</p>
       </div>
     </div>
     <div class="slide-foot"><span>【研究题目缩写】 · 组会汇报</span><span class="foot-num"></span></div>
@@ -348,6 +358,7 @@ body.editing .slide.active.overflow{box-shadow:inset 0 0 0 3px #e05b4d;}
 <div id="editChip">编辑模式 · 点击文字直接修改 · 改动自动暂存</div>
 <div id="dirty" hidden>有未落盘的修改 · 记得「保存新版本」</div>
 <div id="toast"></div>
+<div id="charttip"></div>
 
 <div id="toolbar">
   <button id="prevBtn" title="上一页 (←)">◀</button>
@@ -536,6 +547,7 @@ function serialize(){
   $$('.panel').forEach(function(p){p.hidden=true;});
   $('#restore').hidden=true;$('#dirty').hidden=true;
   $('#toast').classList.remove('show');
+  $('#charttip').classList.remove('show');
   document.body.classList.remove('ui-visible');
   /* 清掉编辑模式自动补的空备注块，保持存档干净 */
   $$('aside.notes').forEach(function(n){
@@ -668,6 +680,21 @@ function updatePresenter(){
     nextEl.querySelector('b').textContent=t?t.textContent:('（第 '+(cur+2)+' 页）');
   }else{nextEl.textContent='已是最后一页';}
 }
+
+/* ---------- L2 · 交互式图表悬停查值 ----------
+   三问答卷：①零依赖原生 JS，断网单文件成立；
+   ②PDF 降级=图上印死的静态数值（tooltip 打印隐藏，informed loss）；
+   ③编辑模式自动停用，不与 contenteditable 抢交互。 */
+document.addEventListener('mousemove',function(e){
+  var tip=$('#charttip');
+  if(editing){tip.classList.remove('show');return;}
+  var t=e.target&&e.target.closest?e.target.closest('.slide svg [data-value]'):null;
+  if(!t){tip.classList.remove('show');return;}
+  tip.textContent=(t.getAttribute('data-label')||'数值')+'：'+t.getAttribute('data-value');
+  tip.style.left=(e.clientX+14)+'px';
+  tip.style.top=(e.clientY-34)+'px';
+  tip.classList.add('show');
+});
 
 /* ---------- 浮层 ---------- */
 var toastTimer=null;
