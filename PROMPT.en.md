@@ -66,6 +66,11 @@ Generate a single-file HTML slide deck for me (scenario: 【lab meeting / thesis
    - The meta names (deck-id / deck-version), the localStorage prefix (agent-deck:) and the window.deck API signature as specified above;
    - Keep these anchors intact and the repository's conformance checker (checker/check.mjs) can run the full acceptance checklist against any deck automatically.
 
+8. Speaker notes & presenter view (optional enhancement: recommended, not counted as an acceptance failure)
+   - Each slide may carry an <aside class="notes"> block: always hidden in presentation and print; shown as a distinct editable block in edit mode, with an empty one auto-added to note-less slides on entering edit mode;
+   - The S key or a "Presenter" toolbar button opens a popup presenter view: current notes, next-slide preview, page counter, elapsed timer; the popup's DOM is driven entirely by the main window — write no script inside the popup (avoids F2 script truncation);
+   - The overflow check must temporarily exclude note blocks to avoid false positives; serialization strips empty note blocks to keep archives clean.
+
 【II. Design requirements】
 
 - Academic, light theme: white background #ffffff, body text #1a2332, primary #0f4c81 (deep blue), secondary #1a7f8e (teal), light line #dde4ec, light fill #f4f7fa; restrained and clean, no flashy animations;

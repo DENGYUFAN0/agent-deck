@@ -33,7 +33,8 @@ English&nbsp;·&nbsp;[简体中文](README.zh-CN.md)&nbsp;·&nbsp;[한국어](RE
 
 - **Present** — 16:9 (1280×720), keyboard navigation, fullscreen, deep links (`#5`), toolbar **and cursor auto-hide** while presenting: the audience sees nothing but slides.
 - **Edit live** — press <kbd>E</kbd>: every slide becomes editable in place. Paste is forced to plain text; edits autosave to `localStorage`; reopening offers a restore banner; over-tall content gets a red warning before the PDF silently crops it.
-- **Versioned by design** — *Save new version* downloads `title_v02_date.html` with your change note appended to the embedded revision log. <kbd>Ctrl</kbd>+<kbd>S</kbd> is intercepted (the browser's native "save page" would silently lose your edits).
+- **Presenter view** — press <kbd>S</kbd>: a popup with your per-slide notes, a next-slide preview and a timer. Notes live inside the file (`<aside class="notes">`), invisible to the audience and excluded from the PDF.
+- **Versioned by design** — *Save new version* opens a system save dialog and writes `title_v02_date.html` straight back to disk (File System Access API; download fallback), with your change note appended to the embedded revision log. <kbd>Ctrl</kbd>+<kbd>S</kbd> is intercepted (the browser's native "save page" would silently lose your edits).
 - **One-click PDF** — `window.print()` with `@page` sized exactly like a PowerPoint 16:9 page. One slide per page, UI hidden, backgrounds preserved, no trailing blank page. Zero libraries.
 - **Agent-native** — a written contract ([PROMPT.md](PROMPT.md)) lets **any** AI agent (Claude, ChatGPT, Gemini, DeepSeek…) generate or modify compliant decks. The contract is the interface.
 
@@ -56,7 +57,7 @@ Then run the **60-second acceptance checklist** at the bottom of PROMPT.md. Any 
 
 ## The checklist is executable
 
-Every push runs the [conformance checker](checker/check.mjs) against `template.html` in CI — **27 automated checks**: offline loading (all external requests blocked), navigation, live editing, autosave, plain-text paste, serialization, print CSS, even PDF page count and 16:9 page size. Verify any deck yourself:
+Every push runs the [conformance checker](checker/check.mjs) against `template.html` in CI — **28 automated checks**: offline loading (all external requests blocked), navigation, live editing, autosave, plain-text paste, serialization, print CSS, even PDF page count and 16:9 page size. Verify any deck yourself:
 
 ```bash
 cd checker && npm install && npx playwright install chromium
