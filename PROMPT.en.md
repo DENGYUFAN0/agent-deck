@@ -2,13 +2,51 @@
 
 > **Translation notice:** this is an English translation of [PROMPT.md](PROMPT.md). If the two ever disagree, **the Chinese version is canonical.**
 >
-> Usage: copy the block below into any AI agent (Claude / ChatGPT / Gemini / DeepSeek / Kimi…), replacing the 【】 placeholders with your content.
-> If the agent accepts file uploads, also attach `template.html` and add "follow this file's implementation" — highest fidelity.
+> **Default to section A "template fill"**: hand `template.html` (the golden master) to any AI agent — the machinery travels with the master, the model only fills in content, so even mid-tier models get it right in one shot.
+> Use section A+ "from scratch" only when developing a new master (strongest models only). Section B edits an existing file (daily driver), section C migrates from PPT.
 > After generation, run the 60-second acceptance checklist at the bottom; paste any failed item back to the agent verbatim.
 
 ---
 
-## A. Generate a new deck from scratch (main prompt)
+## A. Template fill (default mode — works with any model)
+
+Send `template.html` (the master) to the agent together with the block below; in a chat that can't take files, paste the master's full text after the prompt.
+
+```text
+Build a new deck for me on top of the attached agent-deck master. The master carries all the machinery (presenting / live editing / versioned saving / PDF export); you are responsible for content only, never for machinery.
+
+【Two iron rules】
+1. You may only modify what lies between the two markers "✂ CONTENT-START ✂" and "✂ CONTENT-END ✂", plus the <title> text and the content value of meta deck-id (set it to topic-slug-date). Outside the markers — <style>, <script>, the toolbar, every overlay, meta deck-version — do not touch a single character, and do not "helpfully optimize" anything.
+2. Inside the markers, use only the structures from the component manual below: invent no new class names, write no <script>, pull in no external resources; draw charts as inline SVG with data-label / data-value attributes on the shapes (keep the static values printed at the top of the bars — they are the PDF fallback).
+
+【Component manual】(every component has a live example in the master — copy the structure, swap the content)
+- Regular slide: <section class="slide"> content… <div class="slide-foot"><span>short title</span><span class="foot-num"></span></div> </section>
+- Cover slide: <section class="slide cover">: .kicker + h1 + .subtitle + .meta + aside.notes + .cover-hint
+- Section header: <p class="kicker">01 · SECTION</p> + <h2>Title</h2>
+- Two columns: <div class="cols"><div class="col">…</div><div class="col">…</div></div>
+- Key-point box: <div class="box">…</div>; question box: <div class="box ask"><b>1 · type</b> question + my inclination</div>
+- Status tags: <span class="tag done">done</span> (also tag doing / tag risk)
+- Table: <table><tr><th>…</th></tr><tr><td>…</td></tr></table>
+- Roadmap: <ol class="roadmap"><li class="now"><b>③ Stage</b>note</li>…</ol> (mark the current stage with now)
+- Chart: inline SVG (see master slide 5), rects with data-label/data-value, static values above bars
+- Speaker notes: <aside class="notes">visible only in presenter view (S key)</aside>
+- Any number of slides, but keep density restrained — one key point per slide; split when content doesn't fit (failure mode F3)
+
+【Content】
+- Scenario: 【lab meeting / thesis defense / project review / course presentation / any】
+- Outline & material: 【paste here; fill gaps with 【】 placeholders per convention — never leave blanks, never fabricate】
+
+【Pre-delivery self-check】
+- Zero changes outside the markers (verify <style> and <script> are byte-identical to the master);
+- Sweep the Failure Mode Catalog (F1–F9) at the bottom — under template fill, F1 external dependencies and F3 overflow are the main risks;
+- Return the complete single-file HTML, never fragments.
+```
+
+---
+
+## A+. Full contract · runtime from scratch (advanced: only when developing a new master)
+
+> **Warning**: this mode asks the model to implement ~600 lines of runtime machinery (stage geometry, serialization, print, saving…) from a prose spec — only the strongest models get it right in one pass. Field record: a mid-tier model got ~90% of the machinery logic right, then botched one line of stage-centering math, cropping every single slide. **For everyday decks use section A**; the full contract below also serves as the acceptance standard for every mode.
 
 ```text
 Generate a single-file HTML slide deck for me (scenario: 【lab meeting / thesis defense / project review / course presentation / any】), strictly satisfying the following contract. The contract is the interface: missing any single item counts as failure.
@@ -63,6 +101,7 @@ Generate a single-file HTML slide deck for me (scenario: 【lab meeting / thesis
 7. Machine-checkable anchors (required for automated conformance checking)
    - Fixed ids: toolbar, counter (page counter), restore (restore banner), revision-log;
    - Fixed classes: .slide, .slide.active (current), body.editing (edit mode), .slide.overflow (over-tall warning);
+   - Content markers: "✂ CONTENT-START ✂" and "✂ CONTENT-END ✂" comments wrapping all slides (the mechanical boundary for template-fill mode);
    - The meta names (deck-id / deck-version), the localStorage prefix (agent-deck:) and the window.deck API signature as specified above;
    - Keep these anchors intact and the repository's conformance checker (checker/check.mjs) can run the full acceptance checklist against any deck automatically.
 
@@ -122,11 +161,10 @@ Requirements:
 ## C. Migrate from an old PPT
 
 ```text
-Attached is my old PPT (or: below is the per-slide text of my PPT).
-Convert it into a single-file HTML slide deck satisfying this contract:
-【paste Part I "Hard requirements" and Part II "Design requirements" from section A here】
-Migration rules: one PPT slide → one slide; drop decorative elements; redraw charts as inline SVG;
-mark content gaps with 【】 placeholders.
+Attached is my old PPT (or: below is the per-slide text of my PPT), together with the agent-deck master template.html.
+Following section A's two iron rules and component manual, migrate the PPT content into the master:
+one PPT slide → one slide; drop decorative elements; redraw charts as inline SVG (with data-label / data-value);
+mark content gaps with 【】 placeholders; return the complete single-file HTML.
 ```
 
 ---

@@ -1,13 +1,51 @@
 # PROMPT.md — 万能提示词（粘给任何 AI agent）
 
-> 用法：复制下面代码块里的整段文字，发给任何一家 AI agent（Claude / ChatGPT / Gemini / DeepSeek / Kimi …），把【】里的内容换成你的。
-> 如果对方 agent 能接收文件，把 `template.html` 一起发给它并加一句「参照此文件的实现方式」，保真度最高。
+> **默认走 A 段「母版填充」**：把 `template.html`（黄金母版）发给任何一家 AI agent（Claude / ChatGPT / Gemini / DeepSeek / Kimi …）——机件由母版携带，模型只填内容，中小模型也能一次做对。
+> 只有开发新母版时才用 A+ 段「从零实现」（仅限最强模型）。B 段改现有文件（日常主用），C 段从旧 PPT 迁移。
 > 生成后按文末「验收清单」自测 60 秒，不合格就把不合格的条目原文丢回给 agent 让它修。
 > 也可以机器验收：`cd checker && npm install && node check.mjs 你的文件.html`（仓库自带合规校验器，逐条自动跑清单）。
 
 ---
 
-## A. 从零生成一份新汇报（主提示词）
+## A. 母版填充（默认主模式 —— 任何模型都能干）
+
+把 `template.html`（母版）连同下面这段话一起发给 agent；不能传文件的聊天框，就把母版全文粘贴在提示词后面。
+
+```text
+请以随附的 agent-deck 母版为基础，为我生成一份新汇报。母版自带全部机件（放映 / 现场编辑 / 版本存档 / 导出 PDF），你只负责内容，不负责机件。
+
+【两条铁律】
+1. 只允许改动母版中「✂ CONTENT-START ✂」与「✂ CONTENT-END ✂」两道界标之间的内容，外加 <title> 的文字和 meta deck-id 的 content 值（改成 主题英文或拼音-日期）。界标之外——<style>、<script>、工具栏、各浮层、meta deck-version——一个字符都不许动，也不许"顺手优化"。
+2. 界标之内只使用下方组件说明书里的结构：不发明新类名、不写任何 <script>、不引入任何外部资源；图表用内联 SVG 并给图形元素加 data-label / data-value 属性（柱顶的静态数值必须保留，那是 PDF 的兜底呈现）。
+
+【组件说明书】（每个组件母版里都有现成实例，照抄结构换内容）
+- 普通页骨架：<section class="slide"> 内容… <div class="slide-foot"><span>题目缩写</span><span class="foot-num"></span></div> </section>
+- 封面页：<section class="slide cover">：.kicker + h1 + .subtitle + .meta + aside.notes + .cover-hint
+- 章节头：<p class="kicker">01 · 章节名</p> + <h2>标题</h2>
+- 两栏：<div class="cols"><div class="col">…</div><div class="col">…</div></div>
+- 重点结论框：<div class="box">…</div>；提问框：<div class="box ask"><b>1 · 类别</b>　问题 + 我的倾向</div>
+- 状态签：<span class="tag done">完成</span>（另有 tag doing / tag risk）
+- 表格：<table><tr><th>…</th></tr><tr><td>…</td></tr></table>
+- 路线图：<ol class="roadmap"><li class="now"><b>③ 阶段名</b>说明</li>…</ol>（当前阶段加 now）
+- 图表：内联 SVG（参照母版第 5 页），矩形带 data-label/data-value，柱顶印静态数值
+- 演讲者备注：<aside class="notes">只有演讲者视图（S 键）可见</aside>
+- 页数不限，但每页信息克制、一页一个重点；写不下就拆页（失败模式 F3）
+
+【内容】
+- 场景：【组会汇报 / 论文答辩 / 项目评审 / 课程展示 / 任意】
+- 大纲与素材：【粘贴在此；没给全的地方按场景惯例补【】占位符，别空着也别编造】
+
+【交付前自查】
+- 界标之外是否零改动（对照母版逐段确认 <style> 与 <script> 原封未动）；
+- 对照文末「失败模式目录 F1–F9」扫一遍（母版填充模式下重点防 F1 外部依赖、F3 超高）；
+- 返回完整的单文件 HTML，不要只给片段。
+```
+
+---
+
+## A+. 完整契约 · 从零实现运行时（进阶：只在开发新母版时用）
+
+> **警告**：本模式要求模型从散文契约实现约 600 行运行时机件（舞台几何、序列化、打印、保存……），只有最强的模型能一次做对。实测记录：某中档模型走此模式，机件逻辑完成九成，却因舞台居中几何一处写错导致每一页错位裁切、整份报废。**日常生成汇报请用 A 段母版填充**；下面的完整契约同时也是所有模式的验收标准。
 
 ```text
 请为我生成一个单文件 HTML 幻灯片（场景：【组会汇报 / 论文答辩 / 项目评审 / 课程展示 / 任意汇报场景】），严格满足以下契约。契约即接口：任何一条不满足都算失败。
@@ -62,6 +100,7 @@
 7. 机器验收锚点（供自动化校验，缺一即无法机检）
    - 固定 id：toolbar（工具栏）、counter（页码）、restore（恢复横幅）、revision-log（版本记录）；
    - 固定类名：幻灯片 .slide、当前页 .slide.active、编辑态 body.editing、超高警告 .slide.overflow；
+   - 内容界标：「✂ CONTENT-START ✂」与「✂ CONTENT-END ✂」注释包住全部幻灯片（母版填充模式的机械边界）；
    - meta 名（deck-id / deck-version）、localStorage 前缀（agent-deck:）、window.deck API 签名均如上文；
    - 守住这些锚点，本仓库的合规校验器（checker/check.mjs）就能对任何 deck 自动跑完验收清单。
 
@@ -121,11 +160,10 @@
 ## C. 从旧 PPT 迁移
 
 ```text
-附件是我以前的 PPT（或：以下是我 PPT 的逐页文字内容）。
-请把它改造成一个符合以下契约的单文件 HTML 幻灯片：
-【把 A 段"硬性要求"和"设计要求"整段粘贴到这里】
-迁移规则：一页 PPT 对应一页幻灯片；装饰性元素舍弃；图表用内联 SVG 重画；
-内容有缺口的地方用【】占位标出。
+附件是我以前的 PPT（或：以下是我 PPT 的逐页文字内容），另附 agent-deck 母版 template.html。
+请按 A 段「母版填充」的两条铁律和组件说明书，把 PPT 内容迁移进母版：
+一页 PPT 对应一页幻灯片；装饰性元素舍弃；图表用内联 SVG 重画（带 data-label / data-value）；
+内容有缺口的地方用【】占位标出；返回完整的单文件 HTML。
 ```
 
 ---

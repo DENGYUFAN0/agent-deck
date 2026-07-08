@@ -46,6 +46,8 @@ check('内嵌版本记录 revision-log 存在',
   /<script\s+type="application\/json"\s+id="revision-log">/.test(source));
 check('保存实现：File System Access API + 下载兜底',
   /showSaveFilePicker/.test(source) && /\.download\s*=/.test(source));
+check('母版内容界标存在（CONTENT-START / CONTENT-END）',
+  source.includes('CONTENT-START') && source.includes('CONTENT-END'));
 
 /* ====== 本地服务器：只供本文件，其余一切请求拦截（等价断网） ====== */
 const server = http.createServer((req, res) => {
@@ -90,6 +92,23 @@ try {
   await page.waitForTimeout(400);
   check('加载无 JS 报错', jsErrors.length === 0, jsErrors.slice(0, 2).join(' | '));
   check('零外部网络请求（断网可用）', externalHits.length === 0, externalHits.slice(0, 2).join(' | '));
+
+  /* 舞台几何：不依赖 window.deck，任何 deck 都测——从零实现最高发的翻车点 */
+  const geo = await page.evaluate(() => {
+    const s = document.querySelector('.slide.active') || document.querySelector('.slide');
+    if (!s) return null;
+    const r = s.getBoundingClientRect();
+    const vw = innerWidth, vh = innerHeight;
+    return {
+      inside: r.left >= -2 && r.top >= -2 && r.right <= vw + 2 && r.bottom <= vh + 2,
+      cx: Math.abs((r.left + r.right) / 2 - vw / 2) < 8,
+      cy: Math.abs((r.top + r.bottom) / 2 - vh / 2) < 8,
+      fill: r.width >= vw - 4 || r.height >= vh - 4
+    };
+  });
+  check('舞台几何：活动页完整可见、居中、等比充满视口',
+    !!geo && geo.inside && geo.cx && geo.cy && geo.fill,
+    geo ? (geo.inside ? '' : '活动页超出视口——舞台居中/缩放数学有误') : '找不到 .slide');
 
   const missingApi = await page.evaluate(() => {
     const need = ['go', 'next', 'prev', 'toggleEdit', 'saveVersion', 'exportPDF', 'serialize', 'version'];

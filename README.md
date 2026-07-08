@@ -49,15 +49,16 @@ English&nbsp;·&nbsp;[简体中文](README.zh-CN.md)&nbsp;·&nbsp;[한국어](RE
 
 [PROMPT.md](PROMPT.md) ships three ready-to-paste prompts (an English translation lives in [PROMPT.en.md](PROMPT.en.md); **the Chinese contract is canonical**):
 
-- **A — from scratch**: paste the contract + your outline into any chat agent;
+- **A — template fill (default)**: send `template.html` + your outline to **any** model — the machinery travels with the golden master, the model only touches the marked content region;
 - **B — incremental edits** (daily driver): send your current `vN.html` + the B prompt;
-- **C — migrate from PPT**: paste your old deck's text content.
+- **C — migrate from PPT**: send the master + your old deck's per-slide text;
+- **A+ — runtime from scratch** (advanced; strongest models only, for developing new masters).
 
 Then run the **60-second acceptance checklist** at the bottom of PROMPT.md. Any failed item goes straight back to the agent, verbatim.
 
 ## The checklist is executable
 
-Every push runs the [conformance checker](checker/check.mjs) against `template.html` in CI — **28 automated checks**: offline loading (all external requests blocked), navigation, live editing, autosave, plain-text paste, serialization, print CSS, even PDF page count and 16:9 page size. Verify any deck yourself:
+Every push runs the [conformance checker](checker/check.mjs) against `template.html` in CI — **30 automated checks**: offline loading (all external requests blocked), navigation, live editing, autosave, plain-text paste, serialization, print CSS, even PDF page count and 16:9 page size. Verify any deck yourself:
 
 ```bash
 cd checker && npm install && npx playwright install chromium
