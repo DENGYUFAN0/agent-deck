@@ -85,7 +85,7 @@ Build the slides from this outline (where I left gaps, fill in conventional plac
 
 【IV. Self-check after generation】
 
-Re-check items 1–7 of Part I one by one and output a self-check table at the end of your reply (tick each item or explain the deviation). Do not drop any capability to "simplify the implementation".
+Re-check items 1–7 of Part I one by one and output a self-check table at the end of your reply (tick each item or explain the deviation). Then sweep the Failure Mode Catalog (F1–F9). Do not drop any capability to "simplify the implementation".
 ```
 
 ---
@@ -135,3 +135,21 @@ mark content gaps with 【】 placeholders.
 | 8 | Open with `#3` in the URL | Lands directly on slide 3 |
 
 Any failure → send that row back to the agent verbatim: "Acceptance item X failed, symptom: …, fix and return the complete file."
+
+---
+
+## Failure Mode Catalog (F1–F9)
+
+A shared vocabulary across agents: report bugs by number ("you committed F2 — fix it and resubmit"). Generating agents should sweep this catalog before delivering.
+
+| # | Failure mode | Symptom | Fix |
+|---|--------------|---------|-----|
+| F1 | External dependency leak | Works online, blank page / wrong fonts offline | Remove CDNs & web fonts; redraw charts as inline SVG; base64 photos if truly needed |
+| F2 | Script truncation | Nothing responds after opening — no keys, no buttons | Nowhere in the inline JS (including comments and strings) may "</" immediately followed by "script" appear; escape "<" before writing JSON |
+| F3 | Over-tall content cropped | Bottom of a slide missing in presentation or PDF | Split the slide; implement the edit-mode overflow warning |
+| F4 | Trailing blank page | PDF has one more page than the deck | Set the last .slide's page break to auto |
+| F5 | UI residue in print | Toolbar / counter / overlays visible in the PDF | Hide all presentation UI in print CSS; listen to beforeprint |
+| F6 | Edit state leaks into the archive | Saved file carries edit highlights or contenteditable | Exit edit mode, close overlays and strip state classes before serializing |
+| F7 | Navigation keys hijack typing | Typing turns pages while editing | Guard key handling with isContentEditable; navigation keys inert inside editable focus |
+| F8 | Machine-check anchor drift | Checker fails across the board; deck can't be auto-verified | Keep contract item 7's fixed ids / classes / meta names / prefix / API signature |
+| F9 | Version mechanism broken | "Save new version" errors or revision log lost | Don't restructure revision-log; version only increments; cancel must roll back |
