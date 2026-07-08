@@ -38,7 +38,8 @@
 4. 修改记录与保存（能力二·记录）
    - <head> 里有两个 meta：deck-id（全局唯一，用 主题+日期 生成）和 deck-version（初始为 1）；
    - <body> 末尾有 <script type="application/json" id="revision-log">[]</script> 作为内嵌版本记录；
-   - 工具栏「保存新版本」按钮：弹窗让我填一句修改说明 → 版本号 +1 → 修改说明和时间追加进 revision-log → 把整个页面（含修改后的内容和更新后的记录）序列化为 '<!DOCTYPE html>\n' + document.documentElement.outerHTML，用 Blob 下载为新文件，文件名 = 标题_v版本号两位数_YYYYMMDD.html；
+   - 工具栏「保存新版本」按钮：弹窗让我填一句修改说明 → 版本号 +1 → 修改说明和时间追加进 revision-log → 把整个页面（含修改后的内容和更新后的记录）序列化为 '<!DOCTYPE html>\n' + document.documentElement.outerHTML，保存为新文件，文件名 = 标题_v版本号两位数_YYYYMMDD.html；
+   - 保存路径首选 File System Access API（showSaveFilePicker 系统保存对话框，可直接写回原文件夹）；用户取消保存时必须回滚版本号与刚追加的记录；API 不存在或出错时降级为 Blob 下载；
    - 序列化前必须退出编辑模式、收起所有浮层，保证下载的文件是干净的；
    - 写入 revision-log 时把 JSON 字符串里的小于号替换为 Unicode 转义序列（反斜杠+u003c），防止修改说明里出现 script 结束标签、截断文档；
    - 特别注意：整个内联脚本里（包括 JS 注释、字符串字面量）都绝不能出现「</」紧跟「script」的连写字面量——HTML 解析器会在那里直接截断脚本，页面所有功能失效；

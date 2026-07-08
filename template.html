@@ -366,7 +366,7 @@ body.editing .slide.active.overflow{box-shadow:inset 0 0 0 3px #e05b4d;}
   <h4>现场编辑与记录</h4>
   <p>按 <kbd>E</kbd> 进入编辑模式后，点击任意文字直接修改（粘贴自动转纯文本）。改动会自动暂存在浏览器里，误关页面不丢；但暂存只是安全网，<b>「保存新版本」下载的 HTML 文件才是唯一可信的存档</b>。若某页内容超出幻灯片高度，会出现红框和提示——超出部分在放映和 PDF 中都会被裁掉，请拆页。</p>
   <h4>保存新版本</h4>
-  <p>点「保存新版本」→ 填一句修改说明 → 自动下载 <code>标题_v02_日期.html</code>。版本号自动 +1，修改说明和时间写进文件内嵌的版本记录（点「版本」可查看）。之后请改用新文件，旧文件留作历史。</p>
+  <p>点「保存新版本」→ 填一句修改说明 → 弹出系统保存对话框，把 <code>标题_v02_日期.html</code> 直接存回你选的文件夹（浏览器不支持时自动降级为下载）。版本号自动 +1，修改说明和时间写进文件内嵌的版本记录（点「版本」可查看）。之后请改用新文件，旧文件留作历史。</p>
   <h4>导出 PDF</h4>
   <p>点「导出 PDF」→ 在打印对话框中：目标选 <b>另存为 PDF</b>；勾选 <b>背景图形</b>；关闭 <b>页眉和页脚</b>。得到逐页 16:9 的 PDF，每张幻灯片恰好一页。</p>
   <p class="rev" style="border:0"><span>请用 Chrome / Edge 打开本文件。PDF 是定稿快照，编辑能力只存在于 HTML 里。</span></p>
@@ -511,13 +511,22 @@ function serialize(){
   document.body.classList.remove('ui-visible');
   return '<!DOCTYPE html>\n'+document.documentElement.outerHTML;
 }
+/* 保存兜底路径：Blob 下载（Firefox/Safari 或系统对话框不可用时） */
+function saveViaDownload(html,fname){
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=fname;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
+}
 function saveVersion(){
   var note=prompt('这一版改了什么？（写入文件内的版本记录，可留空）','');
   if(note===null)return;
-  var newVer=ver()+1;
   var logEl=$('#revision-log');
+  var oldLogText=logEl.textContent,oldVer=ver(),oldKey=LS();
+  var newVer=oldVer+1;
   var log=[];
-  try{log=JSON.parse(logEl.textContent.trim()||'[]');}catch(e){}
+  try{log=JSON.parse(oldLogText.trim()||'[]');}catch(e){}
   var now=new Date();
   log.push({
     v:newVer,
@@ -526,17 +535,35 @@ function saveVersion(){
   });
   /* 把小于号替换为 Unicode 转义序列，防止修改说明里出现 script 结束标签、截断文档 */
   logEl.textContent=JSON.stringify(log).replace(/</g,'\\u003c');
-  var oldKey=LS();
   $('meta[name="deck-version"]').setAttribute('content',String(newVer));
   var base=(document.title.split('—')[0]||'slides').trim().replace(/[\\\/:*?"<>|\s]+/g,'_')||'slides';
   var fname=base+'_v'+pad(newVer)+'_'+now.getFullYear()+pad(now.getMonth()+1)+pad(now.getDate())+'.html';
-  var blob=new Blob([serialize()],{type:'text/html;charset=utf-8'});
-  var a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);a.download=fname;
-  document.body.appendChild(a);a.click();a.remove();
-  setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
-  try{localStorage.removeItem(oldKey);}catch(e){}
-  toast('已导出 '+fname+'（默认在「下载」文件夹）。之后请改用新文件，本文件留作历史。',6000);
+  var html=serialize();
+  var finish=function(msg){
+    try{localStorage.removeItem(oldKey);}catch(e){}
+    toast(msg,6000);
+  };
+  /* 首选 File System Access API：系统保存对话框，可直接写回原文件夹（Chrome/Edge） */
+  if(window.showSaveFilePicker){
+    window.showSaveFilePicker({suggestedName:fname,types:[{description:'HTML 幻灯片',accept:{'text/html':['.html']}}]})
+    .then(function(h){return h.createWritable();})
+    .then(function(w){return w.write(html).then(function(){return w.close();});})
+    .then(function(){finish('已保存新版本 '+fname+'。之后请改用新文件，本文件留作历史。');})
+    .catch(function(err){
+      if(err&&err.name==='AbortError'){
+        /* 用户取消：回滚版本号与记录，当作没保存过 */
+        logEl.textContent=oldLogText;
+        $('meta[name="deck-version"]').setAttribute('content',String(oldVer));
+        toast('已取消保存，版本号未变',3000);
+      }else{
+        saveViaDownload(html,fname);
+        finish('系统保存对话框不可用，已降级为下载 '+fname+'（默认在「下载」文件夹）');
+      }
+    });
+  }else{
+    saveViaDownload(html,fname);
+    finish('已下载 '+fname+'（默认在「下载」文件夹）。之后请改用新文件，本文件留作历史。');
+  }
 }
 
 /* ---------- 导出 PDF ---------- */

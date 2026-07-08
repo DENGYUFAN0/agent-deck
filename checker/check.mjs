@@ -44,6 +44,8 @@ check('meta deck-id 存在', /<meta\s+name="deck-id"\s+content="[^"]+"/.test(sou
 check('meta deck-version 存在', /<meta\s+name="deck-version"\s+content="\d+"/.test(source));
 check('内嵌版本记录 revision-log 存在',
   /<script\s+type="application\/json"\s+id="revision-log">/.test(source));
+check('保存实现：File System Access API + 下载兜底',
+  /showSaveFilePicker/.test(source) && /\.download\s*=/.test(source));
 
 /* ====== 本地服务器：只供本文件，其余一切请求拦截（等价断网） ====== */
 const server = http.createServer((req, res) => {

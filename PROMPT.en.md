@@ -39,7 +39,8 @@ Generate a single-file HTML slide deck for me (scenario: 【lab meeting / thesis
 4. Change log & saving (capability two · record)
    - <head> carries two meta tags: deck-id (globally unique; build it from topic+date) and deck-version (starts at 1);
    - The end of <body> carries <script type="application/json" id="revision-log">[]</script> as the embedded revision log;
-   - A "Save new version" toolbar button: prompt me for a one-line change note → version +1 → append note and timestamp to the revision log → serialize the whole page ('<!DOCTYPE html>\n' + document.documentElement.outerHTML) and download it via Blob as title_v{two-digit version}_YYYYMMDD.html;
+   - A "Save new version" toolbar button: prompt me for a one-line change note → version +1 → append note and timestamp to the revision log → serialize the whole page ('<!DOCTYPE html>\n' + document.documentElement.outerHTML) and save it as title_v{two-digit version}_YYYYMMDD.html;
+   - Prefer the File System Access API for saving (showSaveFilePicker — a system save dialog that writes straight back to the original folder); if the user cancels, roll back the version bump and the just-appended log entry; fall back to a Blob download when the API is unavailable or fails;
    - Before serializing, exit edit mode and close all overlays so the downloaded file is clean;
    - When writing the revision log, escape "<" in the JSON string as the Unicode escape sequence (backslash+u003c) so a change note can never terminate the script element;
    - Critical: nowhere in the inline script — including JS comments and string literals — may the character sequence "</" immediately followed by "script" appear; the HTML parser truncates the script right there and every feature dies;
