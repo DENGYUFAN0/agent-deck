@@ -49,7 +49,9 @@ English&nbsp;·&nbsp;[简体中文](README.zh-CN.md)&nbsp;·&nbsp;[한국어](RE
 
 [PROMPT.md](PROMPT.md) ships three ready-to-paste prompts (an English translation lives in [PROMPT.en.md](PROMPT.en.md); **the Chinese contract is canonical**):
 
-- **A — template fill (default)**: send `template.html` + your outline to **any** model — the machinery travels with the golden master, the model only touches the marked content region;
+- **Step zero — pick a master**: academic light (default) or the corporate pitch master — routing table at the top of PROMPT.md;
+- **A — template fill (default)**: send the chosen master + your outline to **any** model — the machinery travels with the golden master, the model only touches the marked content region;
+- **A-pro — two-step generation** (strong models): a one-page plan first, fill after you confirm it;
 - **B — incremental edits** (daily driver): send your current `vN.html` + the B prompt;
 - **C — migrate from PPT**: send the master + your old deck's per-slide text;
 - **A+ — runtime from scratch** (advanced; strongest models only, for developing new masters).
@@ -58,7 +60,7 @@ Then run the **60-second acceptance checklist** at the bottom of PROMPT.md. Any 
 
 ## The checklist is executable
 
-Every push runs the [conformance checker](checker/check.mjs) against `template.html` in CI — **31 automated checks**: offline loading (all external requests blocked), navigation, live editing, autosave, plain-text paste, serialization, print CSS, even PDF page count and 16:9 page size. Verify any deck yourself:
+Every push runs the [conformance checker](checker/check.mjs) against **both masters** in CI — **31 automated checks** each: offline loading (all external requests blocked), navigation, live editing, autosave, plain-text paste, serialization, print CSS, even PDF page count and 16:9 page size. Verify any deck yourself:
 
 ```bash
 cd checker && npm install && npx playwright install chromium
@@ -66,6 +68,13 @@ node check.mjs path/to/your-deck.html
 ```
 
 Any deck from any agent that honors the contract's machine-checkable anchors (contract item 7) can be verified the same way. Cross-agent conformance reports are welcome.
+
+### Cross-agent conformance record
+
+| Agent | Mode | Result |
+|-------|------|--------|
+| Claude (reference) | master development | 31/31 |
+| DeepSeek | A · template fill | **31/31** (3rd run; runs 1–2 failed and drove the paradigm fixes — see CHANGELOG v0.4–v0.5) |
 
 ## What a slide looks like
 
@@ -96,7 +105,8 @@ Copy [`skill/`](skill/) to `~/.claude/skills/agent-deck/` and say `/agent-deck`.
 
 | File | Role |
 |------|------|
-| [template.html](template.html) | Reference implementation — also a ready-to-use deck and the "gold answer" you can show any agent |
+| [template.html](template.html) | Academic light master (canonical) — a ready-to-use deck and the "gold answer" you can show any agent |
+| [masters/corporate.html](masters/corporate.html) | Corporate pitch master — dark, big-number stats, 8-slide pitch narrative; same machinery, same 31 checks, with a ✂ THEME-TOKENS ✂ brand-color zone |
 | [PROMPT.md](PROMPT.md) | The contract, three usage prompts, acceptance checklist (**canonical, Chinese**) |
 | [PROMPT.en.md](PROMPT.en.md) | English translation of the contract |
 | [METHODOLOGY.md](METHODOLOGY.md) | Full methodology: design rationale, workflow, known pitfalls (Chinese) |

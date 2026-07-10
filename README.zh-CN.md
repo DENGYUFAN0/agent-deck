@@ -51,7 +51,9 @@ AI agent 时代的幻灯片——源文件 = 播放器 = 编辑器。
 
 [PROMPT.md](PROMPT.md) 提供三段即贴即用的提示词（英文版见 [PROMPT.en.md](PROMPT.en.md)，**以中文契约为正典**）：
 
-- **A 段 · 母版填充（默认）**：把 `template.html` 母版 + 你的大纲发给**任何**模型——机件随母版携带，模型只动内容界标之内；
+- **第零步 · 选母版**：学术浅色（默认）或企业路演母版——场景路由表在 PROMPT.md 文首；
+- **A 段 · 母版填充（默认）**：把所选母版 + 你的大纲发给**任何**模型——机件随母版携带，模型只动内容界标之内；
+- **A-pro 段 · 两步生成**（强模型）：先出一页策划稿、你确认后再填充；
 - **B 段 · 增量修改**（日常主用）：把现有 `vN.html` 连同 B 段发给 agent；
 - **C 段 · 从旧 PPT 迁移**：母版 + 旧 PPT 逐页文字；
 - **A+ 段 · 从零实现运行时**（进阶；仅最强模型、开发新母版时用）。
@@ -60,7 +62,7 @@ AI agent 时代的幻灯片——源文件 = 播放器 = 编辑器。
 
 ## 验收清单是可执行的
 
-每次 push，CI 都会用[合规校验器](checker/check.mjs)对 `template.html` 自动跑 **31 项验收**：断网加载（拦截一切外部请求）、翻页、现场编辑、自动暂存、纯文本粘贴、序列化、打印样式，连 PDF 页数和 16:9 页面尺寸都机检。你也可以对任何 deck 自己跑：
+每次 push，CI 都会用[合规校验器](checker/check.mjs)对**两个母版**各自动跑 **31 项验收**：断网加载（拦截一切外部请求）、翻页、现场编辑、自动暂存、纯文本粘贴、序列化、打印样式，连 PDF 页数和 16:9 页面尺寸都机检。你也可以对任何 deck 自己跑：
 
 ```bash
 cd checker && npm install && npx playwright install chromium
@@ -68,6 +70,13 @@ node check.mjs 你的文件.html
 ```
 
 只要 agent 守住契约第 7 条的机器验收锚点，它生成的任何 deck 都能这样机检。欢迎提交跨 agent 的合规报告。
+
+### 跨 agent 合规记录
+
+| Agent | 模式 | 结果 |
+|-------|------|------|
+| Claude（参考实现） | 母版开发 | 31/31 |
+| DeepSeek | A 段 · 母版填充 | **31/31**（第三轮；前两轮的失败驱动了 v0.4–v0.5 的范式修正，见 CHANGELOG） |
 
 ## 幻灯片长什么样
 
@@ -98,7 +107,8 @@ agent-deck 拿以上这些，刻意换来了单文件、零依赖、agent 可写
 
 | 文件 | 作用 |
 |------|------|
-| [template.html](template.html) | 参考实现 + 可直接用的模板（也是给 agent 看的"标准答案"） |
+| [template.html](template.html) | 学术浅色母版（正典）——可直接用的模板，也是给 agent 看的"标准答案" |
+| [masters/corporate.html](masters/corporate.html) | 企业路演母版——暗色大数字、八页路演叙事；机件同源、同过 31 项机检，含 ✂ THEME-TOKENS ✂ 品牌换色区 |
 | [PROMPT.md](PROMPT.md) | 契约 + 三段提示词 + 验收清单（**正典，中文**） |
 | [PROMPT.en.md](PROMPT.en.md) | 契约英文版 |
 | [METHODOLOGY.md](METHODOLOGY.md) | 方法论全文：技术定案理由、工作流、已知坑、扩展模块 |

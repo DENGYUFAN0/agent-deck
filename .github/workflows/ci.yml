@@ -19,6 +19,9 @@ jobs:
       - name: Install Chromium
         working-directory: checker
         run: npx playwright install --with-deps chromium
-      - name: Run conformance checker on template
+      - name: Run conformance checker on academic master
         working-directory: checker
         run: node check.mjs ../template.html
+      - name: Run conformance checker on corporate master
+        working-directory: checker
+        run: node check.mjs ../masters/corporate.html

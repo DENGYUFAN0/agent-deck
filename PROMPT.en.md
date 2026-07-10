@@ -8,6 +8,19 @@
 
 ---
 
+## Scenario → master routing (step zero, before writing anything)
+
+| Scenario | Master | Character |
+|----------|--------|-----------|
+| Lab meeting / thesis defense / academic conference / course | template.html (academic light · canonical) | Restrained, white, projector-friendly |
+| Fundraising pitch / product launch / client proposal / annual review | masters/corporate.html (corporate dark) | Dark, big numbers, conclusion-first |
+
+If the scenario is ambiguous, ask the user one question first. The layout menu follows **the chosen master's** page order; corporate master pages: 1 cover / 2 problem / 3 solution / 4 market (big-number stats) / 5 traction (chart) / 6 business model (table) / 7 milestones (roadmap) / 8 team & ask.
+
+The corporate master carries a "✂ THEME-TOKENS ✂" brand-token zone: **with the user's confirmation**, its CSS variables may be swapped to the client's brand colors — everything outside the token zone remains off-limits, and the two iron rules stand.
+
+---
+
 ## A. Template fill (default mode — works with any model)
 
 Send `template.html` (the master) to the agent together with the block below; in a chat that can't take files, paste the master's full text after the prompt.
@@ -31,7 +44,7 @@ Build a new deck for me on top of the attached agent-deck master. The master car
 - Chart: inline SVG (see master slide 5), rects with data-label/data-value, static values above bars
 - Speaker notes: <aside class="notes">visible only in presenter view (S key)</aside>
 
-【Layout menu】For every slide, first pick one of these 7 recipes and copy the corresponding master slide's structure — never invent your own layout:
+【Layout menu】For every slide, first pick one of **the chosen master's** ready-made recipes and copy the corresponding slide's structure — never invent your own layout (below are the academic master's 7; corporate page order is in the routing table above):
 cover = master slide 1 | two-column progress/comparison = slide 2 | roadmap = slide 3 | bullets + table = slide 4 | chart = slide 5 | questions = slide 6 | action list = slide 7
 
 【Layout budget】Hard numbers — count them page by page before delivery; this is the lifeline against over-dense pages and overlapping text (F10):
@@ -49,6 +62,19 @@ cover = master slide 1 | two-column progress/comparison = slide 2 | roadmap = sl
 - Sweep the Failure Mode Catalog (F1–F10) at the bottom — under template fill, F1 external dependencies, F3 overflow and F10 collisions are the main risks;
 - Return the complete single-file HTML, never fragments.
 ```
+
+---
+
+## A-pro. Two-step generation (recommended for strong models — the biggest lever for content precision)
+
+Step one asks for a plan, not HTML:
+
+```text
+Do NOT generate slides yet. From the scenario and outline below, produce a one-page plan (markdown table): one row per slide, columns = slide # / layout recipe (from the chosen master) / conclusion-style title / bullet summary (≤6) / chart & data points / one speaker note.
+Scenario: 【lab meeting / pitch / …】  Master: 【academic / corporate】  Outline & material: 【…】
+```
+
+After the user annotates and confirms, send step two: "Following the confirmed plan, do section-A template fill and return the complete single-file HTML." Drift gets corrected at the cheap plan stage, an order of magnitude cheaper than reworking tens of KB of HTML.
 
 ---
 

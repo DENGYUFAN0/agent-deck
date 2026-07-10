@@ -14,7 +14,7 @@ description: |
 ## 资产（动手前先读）
 
 - **契约**：仓库根目录 `PROMPT.md` —— 默认走 A 段「母版填充」（两条铁律 + 组件说明书）；完整契约见 A+ 段（硬性要求 1–7 + 可选 8/9），契约即接口，任何一条不满足都算失败；
-- **基底**：仓库根目录 `template.html` —— 参考实现；
+- **基底**：仓库根目录 `template.html` —— 学术浅色母版（正典）；路演/发布/提案场景改用 `masters/corporate.html`（企业暗色，场景路由见 PROMPT.md 文首；其 THEME-TOKENS 换色须经用户确认）；
 - **视觉**：仓库根目录 `DESIGN.md` —— 学术浅色，动 UI 前必读；
 - 仓库地址：https://github.com/DENGYUFAN0/agent-deck 。
 

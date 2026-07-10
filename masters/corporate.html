@@ -1,0 +1,841 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>路演母版 — agent-deck corporate</title>
+<!-- agent-deck 契约元数据：deck-id 全局唯一（localStorage 暂存的命名空间）；deck-version 每次「保存新版本」自动 +1 -->
+<meta name="deck-id" content="corporate-pitch-master-20260710">
+<meta name="deck-version" content="1">
+<style>
+/* ✂ THEME-TOKENS-START：品牌令牌区。经用户确认后，可把下列变量换成客户品牌色；此区之外的样式与机件仍是禁区 ✂ */
+:root{
+  --bg:#0d1420;
+  --ink:#e8eef6;
+  --muted:#8fa1b8;
+  --accent:#38bdf8;
+  --accent-2:#22d3ee;
+  --line:#1e2d42;
+  --soft:#131f31;
+}
+/* ✂ THEME-TOKENS-END ✂ */
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+html,body{margin:0;padding:0;height:100%;}
+body{
+  background:#05080d;
+  color:var(--ink);
+  font-family:-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC","Noto Sans CJK SC","Malgun Gothic",sans-serif;
+  overflow:hidden;
+}
+::selection{background:#164e63;}
+
+/* ============ 舞台与幻灯片（设计稿 1280×720，16:9） ============ */
+#deck{
+  position:absolute;left:50%;top:50%;
+  width:1280px;height:720px;
+  margin:-360px 0 0 -640px;
+  transform-origin:50% 50%;
+}
+.slide{
+  position:absolute;inset:0;
+  width:1280px;height:720px;
+  background:var(--bg);
+  display:none;
+  flex-direction:column;
+  padding:56px 84px 96px;
+  overflow:hidden;
+  font-size:24px;line-height:1.55;
+}
+.slide.active{display:flex;}
+.slide:focus{outline:none;}
+
+/* ---- 幻灯片内部排版 ---- */
+.kicker{font-size:15px;letter-spacing:.22em;color:var(--accent-2);font-weight:700;margin:0 0 10px;}
+.slide h1{font-size:58px;line-height:1.25;margin:0 0 16px;}
+.slide h2{font-size:36px;margin:0 0 8px;}
+.slide h2::after{content:'';display:block;width:64px;height:4px;background:var(--accent);border-radius:2px;margin:14px 0 22px;}
+.slide h3{font-size:22px;color:var(--accent);margin:0 0 12px;}
+.slide ul,.slide ol{margin:0;padding-left:1.25em;}
+.slide li{margin:10px 0;}
+.slide .muted{color:var(--muted);}
+.slide small,.note{font-size:16px;color:var(--muted);}
+.cols{display:flex;gap:44px;flex:1;min-height:0;}
+.col{flex:1;min-width:0;}
+.box{background:var(--soft);border-left:5px solid var(--accent);border-radius:0 10px 10px 0;padding:14px 20px;font-size:20px;margin-top:24px;}
+.box.ask{margin-top:14px;font-size:19px;}
+.box b{color:var(--accent);}
+.tag{display:inline-block;font-size:13px;line-height:1;padding:5px 10px;border-radius:999px;font-weight:600;vertical-align:2px;margin-left:8px;}
+.tag.done{background:#10331f;color:#4ade80;}
+.tag.doing{background:#33290e;color:#facc15;}
+.tag.risk{background:#3a1512;color:#f87171;}
+table{border-collapse:collapse;width:100%;font-size:18px;}
+th,td{border:1px solid var(--line);padding:9px 12px;text-align:left;}
+th{background:var(--soft);color:var(--accent);}
+.roadmap{display:flex;gap:14px;list-style:none;padding:0;margin:6px 0 30px;}
+.roadmap li{flex:1;background:var(--soft);border-radius:10px;border-top:5px solid var(--line);padding:16px 14px;font-size:16px;color:var(--muted);}
+.roadmap li b{display:block;font-size:17px;color:var(--ink);margin-bottom:6px;}
+.roadmap li.now{border-top-color:var(--accent);background:#0f2b46;}
+.roadmap li.now b{color:var(--accent);}
+/* ---- 企业母版专属 · 大数字 stats 版式（市场页等） ---- */
+.stats{display:flex;gap:28px;margin:14px 0 6px;}
+.stat{flex:1;background:var(--soft);border-radius:14px;border-top:4px solid var(--accent);padding:24px 22px;}
+.stat b{display:block;font-size:52px;line-height:1.15;color:var(--accent);font-variant-numeric:tabular-nums;margin-bottom:8px;}
+.stat span{font-size:16px;color:var(--muted);}
+.slide-foot{
+  position:absolute;left:84px;right:84px;bottom:26px;
+  display:flex;justify-content:space-between;
+  font-size:13px;color:var(--muted);
+  border-top:1px solid var(--line);padding-top:10px;
+  background:var(--bg); /* 不透明底：正文若超量下压（F10），优雅降级为被页脚遮住而非字符交叠 */
+}
+
+/* ---- 演讲者备注：放映与打印全隐，编辑模式可写，演讲者视图（S）可读 ---- */
+.slide aside.notes{display:none;}
+body.editing .slide aside.notes{
+  display:block;background:#1f1a0a;border:1px dashed #8a7a33;border-radius:8px;
+  padding:10px 14px;margin-top:18px;font-size:16px;line-height:1.6;color:#d8c876;
+}
+body.editing .slide aside.notes::before{
+  content:'演讲者备注 · 放映与 PDF 不可见，按 S 在演讲者视图查看';
+  display:block;font-size:12px;font-weight:700;color:#b09a3e;margin-bottom:4px;
+}
+
+/* ---- 封面 ---- */
+.slide.cover{justify-content:center;padding:64px 100px;}
+.cover::before{content:'';position:absolute;left:0;top:0;bottom:0;width:10px;background:linear-gradient(var(--accent),var(--accent-2));}
+.cover h1{font-size:60px;}
+.cover .subtitle{font-size:24px;color:var(--muted);margin:4px 0 44px;}
+.cover .meta{font-size:19px;border-top:1px solid var(--line);padding-top:22px;}
+.cover-hint{position:absolute;left:100px;bottom:30px;font-size:14px;color:var(--muted);}
+
+/* ============ 放映 UI（全部打印时隐藏） ============ */
+#toolbar{
+  position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+  display:flex;gap:4px;align-items:stretch;
+  background:rgba(18,24,32,.85);border-radius:999px;padding:7px 10px;
+  opacity:0;pointer-events:none;transition:opacity .3s;z-index:50;
+}
+body.ui-visible #toolbar,body.editing #toolbar{opacity:1;pointer-events:auto;}
+/* 放映时观众看不到任何操作痕迹：静止时连光标一并隐去 */
+body:not(.ui-visible):not(.editing){cursor:none;}
+#toolbar button{
+  border:0;background:transparent;color:#dfe7f0;
+  font-size:13px;font-family:inherit;padding:7px 12px;border-radius:999px;
+  cursor:pointer;white-space:nowrap;
+}
+#toolbar button:hover{background:rgba(255,255,255,.14);}
+#toolbar button.on{background:var(--accent);color:#fff;}
+#toolbar .sep{width:1px;background:rgba(255,255,255,.2);margin:4px 3px;}
+#counter{position:fixed;right:16px;bottom:22px;font-size:12px;color:#9fb0c3;z-index:40;}
+#bar-wrap{position:fixed;left:0;bottom:0;width:100%;height:3px;z-index:40;}
+#bar{height:100%;width:0;background:var(--accent-2);transition:width .2s;}
+#editChip{
+  display:none;position:fixed;left:16px;top:16px;z-index:55;
+  background:#b3541e;color:#fff;font-size:12px;padding:5px 12px;border-radius:999px;
+}
+body.editing #editChip{display:block;}
+body.editing .slide.active{box-shadow:inset 0 0 0 3px var(--accent-2);}
+body.editing .slide.active.overflow{box-shadow:inset 0 0 0 3px #e05b4d;}
+#dirty{
+  position:fixed;left:16px;bottom:22px;z-index:40;
+  background:rgba(179,84,30,.92);color:#fff;font-size:12px;padding:5px 12px;border-radius:999px;
+}
+#toast{
+  position:fixed;top:18px;left:50%;transform:translateX(-50%);z-index:60;
+  background:rgba(18,24,32,.94);color:#fff;font-size:13px;
+  padding:10px 18px;border-radius:10px;max-width:72vw;
+  opacity:0;pointer-events:none;transition:opacity .25s;
+}
+#toast.show{opacity:1;}
+/* ---- L2 模块 · 交互式图表：放映态悬停查值（编辑模式停用；PDF 降级=图上静态数值） ---- */
+#charttip{
+  position:fixed;z-index:58;pointer-events:none;white-space:nowrap;
+  background:rgba(18,24,32,.94);color:#fff;font-size:13px;
+  padding:6px 11px;border-radius:8px;
+  opacity:0;transition:opacity .12s;
+}
+#charttip.show{opacity:1;}
+body:not(.editing) .slide svg [data-value]{cursor:crosshair;}
+body:not(.editing) .slide svg [data-value]:hover{opacity:.82;}
+#restore{
+  position:fixed;top:0;left:0;right:0;z-index:70;
+  display:flex;gap:14px;align-items:center;justify-content:center;
+  background:#fff7e6;color:#7a4a12;border-bottom:1px solid #eadfc8;
+  padding:10px 16px;font-size:13px;
+}
+#restore[hidden]{display:none;}
+#restore button{border:1px solid #d9b98a;background:#fff;color:#7a4a12;border-radius:8px;padding:4px 12px;font-size:13px;cursor:pointer;font-family:inherit;}
+#restore button:hover{background:#f7ecd8;}
+.panel{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:65;
+  width:580px;max-height:72vh;overflow:auto;
+  background:#fff;border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,.4);
+  padding:26px 30px;font-size:14px;line-height:1.7;
+}
+.panel[hidden]{display:none;}
+.panel h4{margin:18px 0 6px;color:var(--accent);font-size:15px;}
+.panel h4:first-of-type{margin-top:0;}
+.panel .close{position:absolute;right:14px;top:10px;border:0;background:none;font-size:22px;color:var(--muted);cursor:pointer;}
+.panel kbd{background:var(--soft);border:1px solid var(--line);border-radius:5px;padding:1px 7px;font-size:12px;font-family:Consolas,monospace;}
+.panel .keys{display:grid;grid-template-columns:auto 1fr;gap:5px 16px;}
+.panel .rev{border-bottom:1px solid var(--line);padding:10px 0;}
+.panel .rev b{color:var(--accent);margin-right:10px;}
+.panel .rev span{color:var(--muted);font-size:12px;}
+.panel .rev p{margin:4px 0 0;}
+
+/* ============ 打印（导出 PDF 的核心） ============ */
+@media print{
+  @page{size:1280px 720px;margin:0;}
+  html,body{overflow:visible;height:auto;background:#fff;}
+  #toolbar,#counter,#bar-wrap,#toast,#restore,#editChip,#dirty,.panel,.cover-hint,aside.notes,#charttip{display:none !important;}
+  #deck{position:static;margin:0;width:auto;height:auto;transform:none !important;}
+  .slide{position:relative;inset:auto;display:flex !important;box-shadow:none !important;page-break-after:always;break-after:page;}
+  .slide:last-of-type{page-break-after:auto;break-after:auto;}
+}
+</style>
+</head>
+<body>
+
+<div id="deck">
+<!-- ✂ CONTENT-START：内容区开始。母版填充模式下，AI 只允许改动此界标之内（另加 <title> 文字与 meta deck-id）✂ -->
+
+  <!-- 1 · 封面 -->
+  <section class="slide cover active">
+    <p class="kicker">融资路演 · 【轮次，如 Pre-A】</p>
+    <h1>【产品 / 公司名】</h1>
+    <p class="subtitle">【一句话定位：为「谁」用「什么」解决「什么问题」】</p>
+    <p class="meta">汇报人：【姓名 · 职务】　｜　【公司全称】　｜　【2026-XX-XX】</p>
+    <aside class="notes">开场 30 秒：一句话钩子 + 今天要投资人做的决定。演讲者备注只有你能看到（按 S）。</aside>
+    <div class="cover-hint">→ / 空格 翻页　·　E 编辑　·　S 演讲者视图　·　？帮助</div>
+  </section>
+
+  <!-- 2 · 问题 -->
+  <section class="slide">
+    <p class="kicker">01 · 问题</p>
+    <h2>【目标用户正在忍受什么】</h2>
+    <ul>
+      <li>【痛点 1：谁、在什么场景、付出了什么代价——给数字】</li>
+      <li>【痛点 2】</li>
+      <li>【痛点 3】</li>
+    </ul>
+    <div class="box">现有方案为什么不行：【一句话点破在位者的结构性短板】</div>
+    <div class="slide-foot"><span>【项目名】 · 路演</span><span class="foot-num"></span></div>
+  </section>
+
+  <!-- 3 · 方案 -->
+  <section class="slide">
+    <p class="kicker">02 · 方案</p>
+    <h2>【我们用什么方式把代价降到多少】</h2>
+    <div class="cols">
+      <div class="col">
+        <h3>产品是什么</h3>
+        <ul>
+          <li>【核心功能一句话】</li>
+          <li>【与在位者的本质差异】</li>
+          <li>【用户拿到的可量化收益】</li>
+        </ul>
+      </div>
+      <div class="col">
+        <h3>为什么是现在</h3>
+        <ul>
+          <li>【技术 / 成本拐点】</li>
+          <li>【政策或渠道窗口】</li>
+          <li>【我们已验证的先发证据】</li>
+        </ul>
+      </div>
+    </div>
+    <div class="box">价值主张：【一句话，含数字】</div>
+    <aside class="notes">这一页只讲"凭什么是我们、凭什么是现在"，产品细节留给 Demo。</aside>
+    <div class="slide-foot"><span>【项目名】 · 路演</span><span class="foot-num"></span></div>
+  </section>
+
+  <!-- 4 · 市场（stats 大数字版式） -->
+  <section class="slide">
+    <p class="kicker">03 · 市场</p>
+    <h2>【市场有多大、我们切哪一块】</h2>
+    <div class="stats">
+      <div class="stat"><b>【¥380亿】</b><span>TAM · 【口径来源】</span></div>
+      <div class="stat"><b>【¥62亿】</b><span>SAM · 【可服务口径】</span></div>
+      <div class="stat"><b>【¥4.5亿】</b><span>SOM · 【三年可得】</span></div>
+    </div>
+    <ul style="margin-top:26px">
+      <li>【切入策略：先打哪个细分、为什么它是滩头阵地】</li>
+      <li>【扩张路径：从滩头到主战场的一句话】</li>
+    </ul>
+    <div class="slide-foot"><span>【项目名】 · 路演</span><span class="foot-num"></span></div>
+  </section>
+
+  <!-- 5 · 进展（图表版式） -->
+  <section class="slide">
+    <p class="kicker">04 · 进展</p>
+    <h2>【用数据说话的标题，例：连续四季度环比增长 40%+】</h2>
+    <div class="cols">
+      <div class="col">
+        <svg viewBox="0 0 620 340" role="img" aria-label="季度增长柱状图">
+          <g stroke="#1e2d42" stroke-width="1">
+            <line x1="70" y1="40"  x2="590" y2="40"/>
+            <line x1="70" y1="120" x2="590" y2="120"/>
+            <line x1="70" y1="200" x2="590" y2="200"/>
+            <line x1="70" y1="280" x2="590" y2="280"/>
+          </g>
+          <g fill="#8fa1b8" font-size="14">
+            <text x="60" y="285" text-anchor="end">0</text>
+            <text x="60" y="205" text-anchor="end">40</text>
+            <text x="60" y="125" text-anchor="end">80</text>
+            <text x="60" y="45"  text-anchor="end">120</text>
+          </g>
+          <rect x="110" y="220" width="70" height="60"  rx="4" style="fill:#2c405c" data-label="Q1" data-value="30"/>
+          <rect x="230" y="184" width="70" height="96"  rx="4" style="fill:#2c405c" data-label="Q2" data-value="48"/>
+          <rect x="350" y="136" width="70" height="144" rx="4" style="fill:#2c405c" data-label="Q3" data-value="72"/>
+          <rect x="470" y="72"  width="70" height="208" rx="4" style="fill:var(--accent)" data-label="Q4" data-value="104"/>
+          <g fill="#e8eef6" font-size="16" font-weight="600" text-anchor="middle">
+            <text x="145" y="211">30</text>
+            <text x="265" y="175">48</text>
+            <text x="385" y="127">72</text>
+            <text x="505" y="63">104</text>
+          </g>
+          <g fill="#8fa1b8" font-size="15" text-anchor="middle">
+            <text x="145" y="308">Q1</text>
+            <text x="265" y="308">Q2</text>
+            <text x="385" y="308">Q3</text>
+            <text x="505" y="308">Q4</text>
+          </g>
+        </svg>
+        <p class="note">图 1：【指标名，如月活 / 万】季度走势（示例数据）</p>
+      </div>
+      <div class="col">
+        <div class="box" style="margin-top:0">结论：【一句话，含增长率与基数】</div>
+        <ul style="margin-top:22px">
+          <li>【增长驱动：靠什么涨的】</li>
+          <li>【单位经济：LTV / CAC 或毛利一句话】</li>
+        </ul>
+      </div>
+    </div>
+    <div class="slide-foot"><span>【项目名】 · 路演</span><span class="foot-num"></span></div>
+  </section>
+
+  <!-- 6 · 商业模式（表格版式） -->
+  <section class="slide">
+    <p class="kicker">05 · 商业模式</p>
+    <h2>【怎么赚钱、赚谁的钱】</h2>
+    <table>
+      <tr><th>收入线</th><th>定价</th><th>毛利</th><th>状态</th></tr>
+      <tr><td>【订阅 SaaS】</td><td>【¥X/席/月】</td><td>【X%】</td><td>【已上线】</td></tr>
+      <tr><td>【企业定制】</td><td>【¥X/项目】</td><td>【X%】</td><td>【试点中】</td></tr>
+      <tr><td>【生态分成】</td><td>【X% 抽佣】</td><td>【X%】</td><td>【规划】</td></tr>
+    </table>
+    <ul style="margin-top:22px">
+      <li>关键假设：【这套模式成立所依赖的一条最脆弱的假设】</li>
+    </ul>
+    <div class="slide-foot"><span>【项目名】 · 路演</span><span class="foot-num"></span></div>
+  </section>
+
+  <!-- 7 · 里程碑（路线图版式） -->
+  <section class="slide">
+    <p class="kicker">06 · 里程碑</p>
+    <h2>【本轮资金把公司送到哪】</h2>
+    <ol class="roadmap">
+      <li><b>① MVP 上线</b>已完成</li>
+      <li><b>② 首批付费客户</b>已完成：【N 家】</li>
+      <li class="now"><b>③ 规模化验证</b>进行中：【目标】</li>
+      <li><b>④ 【A 轮目标】</b>【12 个月内】</li>
+      <li><b>⑤ 盈亏平衡</b>【预计时点】</li>
+    </ol>
+    <ul>
+      <li>资金用途：【研发 X% / 市场 X% / 团队 X%】</li>
+      <li>本轮结束时的可验证承诺：【到什么日期做到什么数】</li>
+    </ul>
+    <div class="slide-foot"><span>【项目名】 · 路演</span><span class="foot-num"></span></div>
+  </section>
+
+  <!-- 8 · 团队与诉求 -->
+  <section class="slide">
+    <p class="kicker">07 · 团队与诉求</p>
+    <h2>【为什么是这支队伍】</h2>
+    <div class="cols">
+      <div class="col">
+        <h3>团队</h3>
+        <ul>
+          <li>【创始人：与本赛道强相关的履历一句话】</li>
+          <li>【联创 / CTO：技术护城河来源】</li>
+          <li>【顾问 / 背书：一句话】</li>
+        </ul>
+      </div>
+      <div class="col">
+        <div class="box ask" style="margin-top:0"><b>本轮诉求</b>　融资【¥X,XXX 万】，出让【X%】</div>
+        <ul style="margin-top:18px">
+          <li>【用途与里程碑的一句话对应】</li>
+          <li>【已确认 / 意向份额：一句话】</li>
+        </ul>
+      </div>
+    </div>
+    <aside class="notes">收尾定住：复述一遍诉求数字，然后停下来等问题——不要自己填满沉默。</aside>
+    <div class="slide-foot"><span>【项目名】 · 路演</span><span class="foot-num"></span></div>
+  </section>
+
+<!-- ✂ CONTENT-END：内容区结束。此界标之外（样式、脚本、工具栏、浮层）一个字符不许动 ✂ -->
+</div>
+
+<!-- ============ 放映 UI ============ -->
+<div id="restore" hidden>
+  <span>检测到上次在浏览器里改过、但还没保存成文件的内容（<b id="restore-time"></b>）。</span>
+  <button id="restore-yes">恢复修改</button>
+  <button id="restore-no">丢弃</button>
+</div>
+<div id="editChip">编辑模式 · 点击文字直接修改 · 改动自动暂存</div>
+<div id="dirty" hidden>有未落盘的修改 · 记得「保存新版本」</div>
+<div id="toast"></div>
+<div id="charttip"></div>
+
+<div id="toolbar">
+  <button id="prevBtn" title="上一页 (←)">◀</button>
+  <button id="nextBtn" title="下一页 (→)">▶</button>
+  <span class="sep"></span>
+  <button id="editBtn" title="编辑模式 (E)">编辑</button>
+  <button id="saveBtn" title="把当前修改保存为新版本 HTML 文件">保存新版本</button>
+  <button id="histBtn" title="查看内嵌的版本记录">版本</button>
+  <span class="sep"></span>
+  <button id="pdfBtn" title="导出 PDF（打印对话框中选「另存为 PDF」）">导出 PDF</button>
+  <button id="presBtn" title="演讲者视图 (S)：本页备注 · 下一页 · 计时">演讲者</button>
+  <button id="fullBtn" title="全屏 (F)">全屏</button>
+  <button id="helpBtn" title="帮助 (?)">?</button>
+</div>
+<div id="counter"></div>
+<div id="bar-wrap"><div id="bar"></div></div>
+
+<div class="panel" id="help" hidden>
+  <button class="close" data-close="help">×</button>
+  <h4>快捷键</h4>
+  <div class="keys">
+    <span><kbd>→</kbd> <kbd>空格</kbd> / <kbd>←</kbd></span><span>下一页 / 上一页</span>
+    <span><kbd>Home</kbd> / <kbd>End</kbd></span><span>第一页 / 最后一页</span>
+    <span><kbd>F</kbd></span><span>全屏放映</span>
+    <span><kbd>E</kbd></span><span>进入 / 退出编辑模式</span>
+    <span><kbd>S</kbd></span><span>演讲者视图：本页备注、下一页、计时（弹窗，投屏观众看不到）</span>
+    <span><kbd>Ctrl</kbd>+<kbd>S</kbd></span><span>保存新版本（已拦截浏览器原生「另存」，那样会丢修改）</span>
+    <span><kbd>?</kbd> / <kbd>Esc</kbd></span><span>打开帮助 / 关闭浮层</span>
+    <span>移动鼠标</span><span>唤出底部工具栏（静止 2.5 秒自动隐藏，放映时观众看不到操作痕迹）</span>
+  </div>
+  <h4>现场编辑与记录</h4>
+  <p>按 <kbd>E</kbd> 进入编辑模式后，点击任意文字直接修改（粘贴自动转纯文本）。改动会自动暂存在浏览器里，误关页面不丢；但暂存只是安全网，<b>「保存新版本」下载的 HTML 文件才是唯一可信的存档</b>。若某页内容超出幻灯片高度，会出现红框和提示——超出部分在放映和 PDF 中都会被裁掉，请拆页。编辑模式下每页底部有黄色「演讲者备注」块，写给自己的讲稿：放映与 PDF 一律隐藏，只在演讲者视图（<kbd>S</kbd>）可见。</p>
+  <h4>保存新版本</h4>
+  <p>点「保存新版本」→ 填一句修改说明 → 弹出系统保存对话框，把 <code>标题_v02_日期.html</code> 直接存回你选的文件夹（浏览器不支持时自动降级为下载）。版本号自动 +1，修改说明和时间写进文件内嵌的版本记录（点「版本」可查看）。之后请改用新文件，旧文件留作历史。</p>
+  <h4>导出 PDF</h4>
+  <p>点「导出 PDF」→ 在打印对话框中：目标选 <b>另存为 PDF</b>；勾选 <b>背景图形</b>；关闭 <b>页眉和页脚</b>。得到逐页 16:9 的 PDF，每张幻灯片恰好一页。</p>
+  <p class="rev" style="border:0"><span>请用 Chrome / Edge 打开本文件。PDF 是定稿快照，编辑能力只存在于 HTML 里。</span></p>
+</div>
+
+<div class="panel" id="history" hidden>
+  <button class="close" data-close="history">×</button>
+  <h4>版本记录</h4>
+  <div id="history-body"></div>
+</div>
+
+<!-- agent-deck 契约：版本记录内嵌于此，随「保存新版本」追加 -->
+<script type="application/json" id="revision-log">[]</script>
+
+<script>
+(function(){
+'use strict';
+var $=function(s){return document.querySelector(s);};
+var $$=function(s){return Array.prototype.slice.call(document.querySelectorAll(s));};
+var slides=$$('.slide');
+var deckId=($('meta[name="deck-id"]')||{content:'deck'}).content;
+function ver(){return parseInt($('meta[name="deck-version"]').content,10)||1;}
+function LS(){return 'agent-deck:'+deckId+':v'+ver();}
+var cur=0,editing=false;
+
+/* ---------- 放映 ---------- */
+function show(i){
+  cur=Math.max(0,Math.min(slides.length-1,i));
+  slides.forEach(function(s,k){s.classList.toggle('active',k===cur);});
+  $('#counter').textContent=(cur+1)+' / '+slides.length;
+  $('#bar').style.width=((cur+1)/slides.length*100)+'%';
+  if(location.hash!=='#'+(cur+1))history.replaceState(null,'','#'+(cur+1));
+  if(editing)checkOverflow();
+  updatePresenter();
+}
+function fit(){
+  var s=Math.min(innerWidth/1280,innerHeight/720);
+  $('#deck').style.transform='scale('+s+')';
+}
+function fillFoot(){
+  slides.forEach(function(s,i){
+    var n=s.querySelector('.foot-num');
+    if(n)n.textContent=(i+1)+' / '+slides.length;
+  });
+}
+function toggleFull(){
+  if(document.fullscreenElement)document.exitFullscreen();
+  else document.documentElement.requestFullscreen().catch(function(){});
+}
+
+/* ---------- 编辑模式 ---------- */
+function toggleEdit(force){
+  var on=(force===undefined)?!editing:!!force;
+  if(on===editing)return;
+  editing=on;
+  document.body.classList.toggle('editing',editing);
+  slides.forEach(function(s){
+    if(editing)s.setAttribute('contenteditable','true');
+    else{s.removeAttribute('contenteditable');s.classList.remove('overflow');}
+  });
+  $('#editBtn').classList.toggle('on',editing);
+  if(editing){
+    /* 没有备注块的页自动补一个空的，方便直接写讲稿 */
+    slides.forEach(function(s){
+      if(!s.querySelector('aside.notes')){
+        var a=document.createElement('aside');a.className='notes';s.appendChild(a);
+      }
+    });
+    toast('编辑模式：点击文字直接修改；按 E 或再点「编辑」退出',3200);checkOverflow();
+  }
+}
+/* 内容超高检测：超出 720px 设计稿的部分，放映和 PDF 中都会被裁掉 */
+function checkOverflow(){
+  var s=slides[cur];
+  /* 备注块放映时不显示，不计入超高 */
+  var notes=Array.prototype.slice.call(s.querySelectorAll('aside.notes'));
+  notes.forEach(function(n){n.style.display='none';});
+  var over=s.scrollHeight-s.clientHeight>4;
+  notes.forEach(function(n){n.style.display='';});
+  if(over&&!s.classList.contains('overflow'))toast('注意：本页内容已超出幻灯片高度，超出部分放映和 PDF 中都会被裁掉，建议拆页',4200);
+  s.classList.toggle('overflow',over);
+}
+/* 自动暂存到 localStorage（防误关；文件才是真身） */
+var saveTimer=null;
+function autosave(){
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(function(){
+    try{
+      localStorage.setItem(LS(),JSON.stringify({
+        t:Date.now(),
+        slides:slides.map(function(s){return s.innerHTML;})
+      }));
+      $('#dirty').hidden=false;
+    }catch(e){/* 隐私模式等场景写不进去：忽略，仍可「保存新版本」落盘 */}
+  },400);
+}
+$('#deck').addEventListener('input',function(){if(editing){autosave();checkOverflow();}});
+/* 粘贴一律转纯文本，避免外来样式污染幻灯片（Selection/Range 标准 API；已废弃的 execCommand 仅作后备） */
+document.addEventListener('paste',function(e){
+  if(!editing)return;
+  if(!e.target.closest||!e.target.closest('.slide'))return;
+  e.preventDefault();
+  var text=(e.clipboardData||window.clipboardData).getData('text/plain');
+  if(!text)return;
+  var sel=window.getSelection();
+  if(sel&&sel.rangeCount){
+    var range=sel.getRangeAt(0);
+    range.deleteContents();
+    var frag=document.createDocumentFragment();
+    var last=null;
+    String(text).replace(/\r/g,'').split('\n').forEach(function(line,i){
+      if(i)frag.appendChild(document.createElement('br'));
+      if(line){last=document.createTextNode(line);frag.appendChild(last);}
+    });
+    if(!last)last=frag.lastChild;
+    range.insertNode(frag);
+    if(last){
+      range.setStartAfter(last);range.collapse(true);
+      sel.removeAllRanges();sel.addRange(range);
+    }
+    /* 手动插入不触发 input 事件，补发一次以驱动自动暂存与超高检测 */
+    e.target.closest('.slide').dispatchEvent(new Event('input',{bubbles:true}));
+  }else if(document.execCommand){
+    document.execCommand('insertText',false,text);
+  }
+});
+/* 打开文件时若发现未落盘的暂存，提示恢复 */
+function checkRestore(){
+  var d=null;
+  try{d=JSON.parse(localStorage.getItem(LS())||'null');}catch(e){}
+  if(!d||!Array.isArray(d.slides)||d.slides.length!==slides.length)return;
+  var differs=d.slides.some(function(h,i){return h!==slides[i].innerHTML;});
+  if(!differs){try{localStorage.removeItem(LS());}catch(e){}return;}
+  $('#restore-time').textContent=new Date(d.t).toLocaleString();
+  $('#restore').hidden=false;
+  $('#restore-yes').onclick=function(){
+    d.slides.forEach(function(h,i){slides[i].innerHTML=h;});
+    fillFoot();
+    $('#restore').hidden=true;$('#dirty').hidden=false;
+    toast('已恢复上次修改；确认无误后请点「保存新版本」把修改落盘',4200);
+  };
+  $('#restore-no').onclick=function(){
+    try{localStorage.removeItem(LS());}catch(e){}
+    $('#restore').hidden=true;
+  };
+}
+
+/* ---------- 保存新版本（自序列化落盘，唯一可信存档） ---------- */
+function pad(n){return String(n).padStart(2,'0');}
+function serialize(){
+  toggleEdit(false);
+  $$('.panel').forEach(function(p){p.hidden=true;});
+  $('#restore').hidden=true;$('#dirty').hidden=true;
+  $('#toast').classList.remove('show');
+  $('#charttip').classList.remove('show');
+  document.body.classList.remove('ui-visible');
+  /* 清掉编辑模式自动补的空备注块，保持存档干净 */
+  $$('aside.notes').forEach(function(n){
+    if(!n.textContent.trim()&&!n.querySelector('img,svg'))n.parentNode.removeChild(n);
+  });
+  return '<!DOCTYPE html>\n'+document.documentElement.outerHTML;
+}
+/* 保存兜底路径：Blob 下载（Firefox/Safari 或系统对话框不可用时） */
+function saveViaDownload(html,fname){
+  var blob=new Blob([html],{type:'text/html;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=fname;
+  document.body.appendChild(a);a.click();a.remove();
+  setTimeout(function(){URL.revokeObjectURL(a.href);},4000);
+}
+function saveVersion(){
+  var note=prompt('这一版改了什么？（写入文件内的版本记录，可留空）','');
+  if(note===null)return;
+  var logEl=$('#revision-log');
+  var oldLogText=logEl.textContent,oldVer=ver(),oldKey=LS();
+  var newVer=oldVer+1;
+  var log=[];
+  try{log=JSON.parse(oldLogText.trim()||'[]');}catch(e){}
+  var now=new Date();
+  log.push({
+    v:newVer,
+    time:now.getFullYear()+'-'+pad(now.getMonth()+1)+'-'+pad(now.getDate())+' '+pad(now.getHours())+':'+pad(now.getMinutes()),
+    note:note.trim()
+  });
+  /* 把小于号替换为 Unicode 转义序列，防止修改说明里出现 script 结束标签、截断文档 */
+  logEl.textContent=JSON.stringify(log).replace(/</g,'\\u003c');
+  $('meta[name="deck-version"]').setAttribute('content',String(newVer));
+  var base=(document.title.split('—')[0]||'slides').trim().replace(/[\\\/:*?"<>|\s]+/g,'_')||'slides';
+  var fname=base+'_v'+pad(newVer)+'_'+now.getFullYear()+pad(now.getMonth()+1)+pad(now.getDate())+'.html';
+  var html=serialize();
+  var finish=function(msg){
+    try{localStorage.removeItem(oldKey);}catch(e){}
+    toast(msg,6000);
+  };
+  /* 首选 File System Access API：系统保存对话框，可直接写回原文件夹（Chrome/Edge） */
+  if(window.showSaveFilePicker){
+    window.showSaveFilePicker({suggestedName:fname,types:[{description:'HTML 幻灯片',accept:{'text/html':['.html']}}]})
+    .then(function(h){return h.createWritable();})
+    .then(function(w){return w.write(html).then(function(){return w.close();});})
+    .then(function(){finish('已保存新版本 '+fname+'。之后请改用新文件，本文件留作历史。');})
+    .catch(function(err){
+      if(err&&err.name==='AbortError'){
+        /* 用户取消：回滚版本号与记录，当作没保存过 */
+        logEl.textContent=oldLogText;
+        $('meta[name="deck-version"]').setAttribute('content',String(oldVer));
+        toast('已取消保存，版本号未变',3000);
+      }else{
+        saveViaDownload(html,fname);
+        finish('系统保存对话框不可用，已降级为下载 '+fname+'（默认在「下载」文件夹）');
+      }
+    });
+  }else{
+    saveViaDownload(html,fname);
+    finish('已下载 '+fname+'（默认在「下载」文件夹）。之后请改用新文件，本文件留作历史。');
+  }
+}
+
+/* ---------- 导出 PDF ---------- */
+function exportPDF(){
+  toggleEdit(false);
+  $$('.panel').forEach(function(p){p.hidden=true;});
+  toast('打印对话框中：目标选「另存为 PDF」，勾选「背景图形」，关闭「页眉和页脚」',4000);
+  setTimeout(function(){window.print();},300);
+}
+
+/* ---------- 演讲者视图（弹窗内不写任何 script，DOM 全部由主窗口驱动，防 F2 截断） ---------- */
+var presenterWin=null,presenterT0=0,presenterTimer=null;
+function fmtElapsed(ms){var s=Math.floor(ms/1000);return pad(Math.floor(s/60))+':'+pad(s%60);}
+function openPresenter(){
+  if(presenterWin&&!presenterWin.closed){presenterWin.focus();updatePresenter();return presenterWin;}
+  var w=window.open('','agentdeck_presenter','width=920,height=640');
+  if(!w){toast('弹窗被浏览器拦截：请允许本页打开弹窗后再按 S',4200);return null;}
+  presenterWin=w;presenterT0=Date.now();
+  var d=w.document;
+  d.open();
+  d.write([
+    '<!DOCTYPE html><html lang="zh-CN"><head><meta charset="UTF-8"><title>演讲者视图</title>',
+    '<style>',
+    'body{margin:0;font-family:-apple-system,"Segoe UI","Microsoft YaHei","PingFang SC",sans-serif;background:#14181f;color:#dfe7f0;display:flex;flex-direction:column;height:100vh;}',
+    '#top{display:flex;gap:20px;align-items:center;padding:12px 20px;background:#0d1117;font-size:14px;color:#9fb0c3;}',
+    '#top b{font-size:20px;color:#7cc4e8;font-variant-numeric:tabular-nums;}',
+    '#top button{margin-left:auto;background:#232b36;border:0;color:#dfe7f0;border-radius:8px;padding:6px 12px;cursor:pointer;font-family:inherit;}',
+    '#notes{flex:1;overflow:auto;padding:22px 26px;font-size:22px;line-height:1.7;}',
+    '#notes.empty{color:#5a6b7f;font-size:17px;}',
+    '#next{padding:14px 26px;background:#0d1117;color:#9fb0c3;font-size:15px;border-top:1px solid #232b36;}',
+    '#next b{color:#dfe7f0;}',
+    '#ctrl{display:flex;gap:10px;padding:12px 20px;background:#0d1117;}',
+    '#ctrl button{flex:1;background:#232b36;border:0;color:#dfe7f0;border-radius:10px;padding:12px;font-size:16px;cursor:pointer;font-family:inherit;}',
+    '#ctrl button:hover{background:#2e3947;}',
+    '</style></head><body>',
+    '<div id="top"><span>第 <b id="p-cur">1</b> / <span id="p-total"></span> 页</span><span>已用 <b id="p-timer">00:00</b></span><button id="p-reset">重置计时</button></div>',
+    '<div id="notes"></div>',
+    '<div id="next"></div>',
+    '<div id="ctrl"><button id="p-prev">◀ 上一页</button><button id="p-next">下一页 ▶</button></div>',
+    '</body></html>'
+  ].join(''));
+  d.close();
+  d.getElementById('p-prev').onclick=function(){show(cur-1);};
+  d.getElementById('p-next').onclick=function(){show(cur+1);};
+  d.getElementById('p-reset').onclick=function(){presenterT0=Date.now();};
+  clearInterval(presenterTimer);
+  presenterTimer=setInterval(function(){
+    if(!presenterWin||presenterWin.closed){clearInterval(presenterTimer);return;}
+    var el=presenterWin.document.getElementById('p-timer');
+    if(el)el.textContent=fmtElapsed(Date.now()-presenterT0);
+  },1000);
+  updatePresenter();
+  return w;
+}
+function updatePresenter(){
+  if(!presenterWin||presenterWin.closed)return;
+  var d=presenterWin.document;
+  var notesEl=d.getElementById('notes');
+  if(!notesEl)return;
+  d.getElementById('p-cur').textContent=cur+1;
+  d.getElementById('p-total').textContent=slides.length;
+  var n=slides[cur].querySelector('aside.notes');
+  if(n&&n.textContent.trim()){notesEl.className='';notesEl.innerHTML=n.innerHTML;}
+  else{notesEl.className='empty';notesEl.textContent='（本页无备注。回主窗口按 E 进编辑模式，在每页底部的黄色备注块里写。）';}
+  var nx=slides[cur+1];
+  var nextEl=d.getElementById('next');
+  if(nx){
+    var t=nx.querySelector('h1,h2');
+    nextEl.innerHTML='下一页：<b></b>';
+    nextEl.querySelector('b').textContent=t?t.textContent:('（第 '+(cur+2)+' 页）');
+  }else{nextEl.textContent='已是最后一页';}
+}
+
+/* ---------- L2 · 交互式图表悬停查值 ----------
+   三问答卷：①零依赖原生 JS，断网单文件成立；
+   ②PDF 降级=图上印死的静态数值（tooltip 打印隐藏，informed loss）；
+   ③编辑模式自动停用，不与 contenteditable 抢交互。 */
+document.addEventListener('mousemove',function(e){
+  var tip=$('#charttip');
+  if(editing){tip.classList.remove('show');return;}
+  var t=e.target&&e.target.closest?e.target.closest('.slide svg [data-value]'):null;
+  if(!t){tip.classList.remove('show');return;}
+  tip.textContent=(t.getAttribute('data-label')||'数值')+'：'+t.getAttribute('data-value');
+  tip.style.left=(e.clientX+14)+'px';
+  tip.style.top=(e.clientY-34)+'px';
+  tip.classList.add('show');
+});
+
+/* ---------- 浮层 ---------- */
+var toastTimer=null;
+function toast(msg,ms){
+  var el=$('#toast');
+  el.textContent=msg;el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},ms||3000);
+}
+function togglePanel(id){
+  var el=document.getElementById(id);
+  var willShow=el.hidden;
+  $$('.panel').forEach(function(p){p.hidden=true;});
+  el.hidden=!willShow;
+}
+function showHistory(){
+  var log=[];
+  try{log=JSON.parse($('#revision-log').textContent.trim()||'[]');}catch(e){}
+  var esc=function(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});};
+  $('#history-body').innerHTML=log.length
+    ?log.slice().reverse().map(function(r){
+        return '<div class="rev"><b>v'+r.v+'</b><span>'+esc(r.time)+'</span><p>'+(esc(r.note)||'（未填写修改说明）')+'</p></div>';
+      }).join('')
+    :'<p class="muted">当前为 v'+ver()+'，还没有版本记录。第一次点「保存新版本」后，这里会记录每一版的修改说明。</p>';
+  togglePanel('history');
+}
+
+/* ---------- 键盘 ---------- */
+/* Ctrl/Cmd+S 拦截为「保存新版本」：浏览器原生「另存网页」存的是磁盘原文件，会丢掉未落盘的修改 */
+document.addEventListener('keydown',function(e){
+  if((e.ctrlKey||e.metaKey)&&!e.altKey&&!e.shiftKey&&(e.key==='s'||e.key==='S')){
+    e.preventDefault();saveVersion();
+  }
+});
+/* 用户绕过按钮直接 Ctrl+P / 菜单打印时，同样保证干净输出 */
+window.addEventListener('beforeprint',function(){
+  toggleEdit(false);
+  $$('.panel').forEach(function(p){p.hidden=true;});
+  $('#restore').hidden=true;
+  $('#toast').classList.remove('show');
+});
+document.addEventListener('keydown',function(e){
+  if(e.target.isContentEditable)return;
+  var tag=e.target.tagName||'';
+  if(tag==='INPUT'||tag==='TEXTAREA')return;
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  switch(e.key){
+    case 'ArrowRight':case 'ArrowDown':case ' ':case 'PageDown':
+      e.preventDefault();show(cur+1);break;
+    case 'ArrowLeft':case 'ArrowUp':case 'PageUp':
+      e.preventDefault();show(cur-1);break;
+    case 'Home':show(0);break;
+    case 'End':show(slides.length-1);break;
+    case 'f':case 'F':toggleFull();break;
+    case 'e':case 'E':toggleEdit();break;
+    case 's':case 'S':openPresenter();break;
+    case '?':togglePanel('help');break;
+    case 'Escape':$$('.panel').forEach(function(p){p.hidden=true;});break;
+  }
+});
+
+/* ---------- 接线与初始化 ---------- */
+$('#prevBtn').onclick=function(){show(cur-1);};
+$('#nextBtn').onclick=function(){show(cur+1);};
+$('#editBtn').onclick=function(){toggleEdit();};
+$('#saveBtn').onclick=saveVersion;
+$('#histBtn').onclick=showHistory;
+$('#pdfBtn').onclick=exportPDF;
+$('#presBtn').onclick=openPresenter;
+$('#fullBtn').onclick=toggleFull;
+$('#helpBtn').onclick=function(){togglePanel('help');};
+$$('[data-close]').forEach(function(b){
+  b.onclick=function(){document.getElementById(b.dataset.close).hidden=true;};
+});
+/* 点完按钮移除焦点，避免随后按空格/回车误触按钮 */
+$('#toolbar').addEventListener('click',function(e){
+  if(e.target.tagName==='BUTTON')e.target.blur();
+});
+/* 放映隐蔽：工具栏平时全隐，鼠标移动浮现，静止 2.5s 淡出；编辑模式常显 */
+var uiTimer=null;
+function wakeUI(){
+  document.body.classList.add('ui-visible');
+  clearTimeout(uiTimer);
+  uiTimer=setTimeout(function(){
+    if(editing)return;
+    if($('#toolbar').matches(':hover')){wakeUI();return;}
+    document.body.classList.remove('ui-visible');
+  },2500);
+}
+document.addEventListener('mousemove',wakeUI);
+window.addEventListener('resize',fit);
+window.addEventListener('hashchange',function(){
+  var n=parseInt(location.hash.slice(1),10);
+  if(n)show(n-1);
+});
+fillFoot();
+var start=parseInt(location.hash.slice(1),10);
+show(start?start-1:0);
+fit();
+checkRestore();
+wakeUI(); /* 打开后先显示工具栏几秒，帮助发现 */
+/* 对外 API：方便自动化与其他 agent 驱动 */
+window.deck={
+  go:function(n){show(n-1);},
+  next:function(){show(cur+1);},
+  prev:function(){show(cur-1);},
+  toggleEdit:toggleEdit,
+  saveVersion:saveVersion,
+  exportPDF:exportPDF,
+  serialize:serialize,
+  version:ver,
+  presenter:openPresenter
+};
+})();
+</script>
+</body>
+</html>
