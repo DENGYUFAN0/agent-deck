@@ -58,7 +58,7 @@ Then run the **60-second acceptance checklist** at the bottom of PROMPT.md. Any 
 
 ## The checklist is executable
 
-Every push runs the [conformance checker](checker/check.mjs) against `template.html` in CI — **30 automated checks**: offline loading (all external requests blocked), navigation, live editing, autosave, plain-text paste, serialization, print CSS, even PDF page count and 16:9 page size. Verify any deck yourself:
+Every push runs the [conformance checker](checker/check.mjs) against `template.html` in CI — **31 automated checks**: offline loading (all external requests blocked), navigation, live editing, autosave, plain-text paste, serialization, print CSS, even PDF page count and 16:9 page size. Verify any deck yourself:
 
 ```bash
 cd checker && npm install && npx playwright install chromium

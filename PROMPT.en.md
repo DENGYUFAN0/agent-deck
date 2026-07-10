@@ -30,7 +30,14 @@ Build a new deck for me on top of the attached agent-deck master. The master car
 - Roadmap: <ol class="roadmap"><li class="now"><b>③ Stage</b>note</li>…</ol> (mark the current stage with now)
 - Chart: inline SVG (see master slide 5), rects with data-label/data-value, static values above bars
 - Speaker notes: <aside class="notes">visible only in presenter view (S key)</aside>
-- Any number of slides, but keep density restrained — one key point per slide; split when content doesn't fit (failure mode F3)
+
+【Layout menu】For every slide, first pick one of these 7 recipes and copy the corresponding master slide's structure — never invent your own layout:
+cover = master slide 1 | two-column progress/comparison = slide 2 | roadmap = slide 3 | bullets + table = slide 4 | chart = slide 5 | questions = slide 6 | action list = slide 7
+
+【Layout budget】Hard numbers — count them page by page before delivery; this is the lifeline against over-dense pages and overlapping text (F10):
+- Exactly 1 kicker + 1 h2 per slide (cover excepted); body bullets ≤ 6 per slide, each ≤ 2 lines (~15 words);
+- With two columns, ≤ 5 items per column; at most 1 table per slide, tables ≤ 5 rows × 4 columns; running paragraphs ≤ 3 lines, longer becomes bullets;
+- 8–15 slides recommended per deck; when content doesn't fit, the ONLY legal fix is splitting the slide — never shrink font sizes, never add inline styles to squeeze line-height/margins, never absolutely-position content elements.
 
 【Content】
 - Scenario: 【lab meeting / thesis defense / project review / course presentation / any】
@@ -38,7 +45,8 @@ Build a new deck for me on top of the attached agent-deck master. The master car
 
 【Pre-delivery self-check】
 - Zero changes outside the markers (verify <style> and <script> are byte-identical to the master);
-- Sweep the Failure Mode Catalog (F1–F9) at the bottom — under template fill, F1 external dependencies and F3 overflow are the main risks;
+- Count every slide against the layout budget: bullets, lines per bullet, table rows/columns, paragraph lines — split slides when over;
+- Sweep the Failure Mode Catalog (F1–F10) at the bottom — under template fill, F1 external dependencies, F3 overflow and F10 collisions are the main risks;
 - Return the complete single-file HTML, never fragments.
 ```
 
@@ -120,7 +128,8 @@ Generate a single-file HTML slide deck for me (scenario: 【lab meeting / thesis
 - Font stack: -apple-system, "Segoe UI", "Microsoft YaHei", "PingFang SC", "Noto Sans CJK SC", "Malgun Gothic", sans-serif (no external fonts; covers Latin/Chinese/Korean);
 - Body text ≥ 22px (at the 1280×720 design size) for projector readability; restrained information density — one key point per slide;
 - Visual asset priority: CSS / inline SVG vectors → tiny KB-scale bitmaps as base64 → photos as a last resort (compressed, base64) — asset forms must be compatible with the single-file constraint;
-- Uniform section headers: a small letter-spaced kicker (e.g. "01 · PROGRESS") + a large title + a short primary-color underline.
+- Uniform section headers: a small letter-spaced kicker (e.g. "01 · PROGRESS") + a large title + a short primary-color underline;
+- The same layout budget as section A applies (bullets ≤ 6, each ≤ 2 lines, at most 1 table per slide and ≤ 5×4, paragraphs ≤ 3 lines, split when it doesn't fit) — guards against overlapping text (F10).
 
 【III. Content】
 
@@ -134,7 +143,7 @@ Build the slides from this outline (where I left gaps, fill in conventional plac
 
 【IV. Self-check after generation】
 
-Re-check items 1–7 of Part I one by one and output a self-check table at the end of your reply (tick each item or explain the deviation). Then sweep the Failure Mode Catalog (F1–F9). Do not drop any capability to "simplify the implementation".
+Re-check items 1–7 of Part I one by one and output a self-check table at the end of your reply (tick each item or explain the deviation). Then sweep the Failure Mode Catalog (F1–F10). Do not drop any capability to "simplify the implementation".
 ```
 
 ---
@@ -186,7 +195,7 @@ Any failure → send that row back to the agent verbatim: "Acceptance item X fai
 
 ---
 
-## Failure Mode Catalog (F1–F9)
+## Failure Mode Catalog (F1–F10)
 
 A shared vocabulary across agents: report bugs by number ("you committed F2 — fix it and resubmit"). Generating agents should sweep this catalog before delivering.
 
@@ -201,3 +210,4 @@ A shared vocabulary across agents: report bugs by number ("you committed F2 — 
 | F7 | Navigation keys hijack typing | Typing turns pages while editing | Guard key handling with isContentEditable; navigation keys inert inside editable focus |
 | F8 | Machine-check anchor drift | Checker fails across the board; deck can't be auto-verified | Keep contract item 7's fixed ids / classes / meta names / prefix / API signature |
 | F9 | Version mechanism broken | "Save new version" errors or revision log lost | Don't restructure revision-log; version only increments; cancel must roll back |
+| F10 | Layout collision (overlapping text) | Text overlaps; tables or bullets sliced by the footer | Obey the layout budget (bullets ≤6, ≤2 lines each, ≤1 table ≤5×4 per slide, paragraphs ≤3 lines); split slides; never shrink fonts, squeeze with inline styles, or absolutely-position content |

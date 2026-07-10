@@ -135,6 +135,36 @@ try {
     });
     check('井号深链直达（#3）', deep === 3, `落在第 ${deep} 页`);
 
+    /* 逐页版式（F10 叠字探测）：每页无超高、正文不压页脚、容器无内溢——设计下限的机检 */
+    const badPages = await page.evaluate(() => {
+      const slides = Array.from(document.querySelectorAll('.slide'));
+      const bad = [];
+      slides.forEach((s, i) => {
+        window.deck.go(i + 1);
+        const problems = [];
+        if (s.scrollHeight - s.clientHeight > 4) problems.push('超高');
+        const foot = s.querySelector('.slide-foot');
+        if (foot) {
+          const ft = foot.getBoundingClientRect().top;
+          const hit = Array.from(s.children).some(el => {
+            if (el === foot || el.matches('aside.notes')) return false;
+            const r = el.getBoundingClientRect();
+            return r.height > 0 && r.bottom > ft + 2;
+          });
+          if (hit) problems.push('压页脚');
+        }
+        /* 容器内溢：栏/列表内容高过容器，溢出的文字会盖住下方元素（F10 的另一形态） */
+        const spill = Array.from(s.querySelectorAll('div,ul,ol,table')).some(el =>
+          el.scrollHeight - el.clientHeight > 8);
+        if (spill) problems.push('容器内溢');
+        if (problems.length) bad.push(`${i + 1}(${problems.join('+')})`);
+      });
+      window.deck.go(3); /* 回到深链位，供后续编辑测试使用 */
+      return bad;
+    });
+    check('逐页版式：无超高、不压页脚、容器无内溢（F10 叠字探测）', badPages.length === 0,
+      badPages.length ? '问题页: ' + badPages.join('、') : `全部 ${slideCount} 页干净`);
+
     /* ================= 打印与 PDF ================= */
     console.log('\n[打印与 PDF]');
     await page.emulateMedia({ media: 'print' });

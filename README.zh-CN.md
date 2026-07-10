@@ -60,7 +60,7 @@ AI agent 时代的幻灯片——源文件 = 播放器 = 编辑器。
 
 ## 验收清单是可执行的
 
-每次 push，CI 都会用[合规校验器](checker/check.mjs)对 `template.html` 自动跑 **30 项验收**：断网加载（拦截一切外部请求）、翻页、现场编辑、自动暂存、纯文本粘贴、序列化、打印样式，连 PDF 页数和 16:9 页面尺寸都机检。你也可以对任何 deck 自己跑：
+每次 push，CI 都会用[合规校验器](checker/check.mjs)对 `template.html` 自动跑 **31 项验收**：断网加载（拦截一切外部请求）、翻页、现场编辑、自动暂存、纯文本粘贴、序列化、打印样式，连 PDF 页数和 16:9 页面尺寸都机检。你也可以对任何 deck 自己跑：
 
 ```bash
 cd checker && npm install && npx playwright install chromium
