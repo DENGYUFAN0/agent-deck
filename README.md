@@ -52,6 +52,7 @@ English&nbsp;·&nbsp;[简体中文](README.zh-CN.md)&nbsp;·&nbsp;[한국어](RE
 - **Step zero — pick a master**: academic light (default) or the corporate pitch master — routing table at the top of PROMPT.md;
 - **A — template fill (default)**: send the chosen master + your outline to **any** model — the machinery travels with the golden master, the model only touches the marked content region;
 - **A-pro — two-step generation** (strong models): a one-page plan first, fill after you confirm it;
+- **A-max — creative mode** (strong models, on explicit request): free-form layouts plus a namespaced `.x-` custom-style zone and re-theming — machinery still untouchable, the checker still the judge;
 - **B — incremental edits** (daily driver): send your current `vN.html` + the B prompt;
 - **C — migrate from PPT**: send the master + your old deck's per-slide text;
 - **A+ — runtime from scratch** (advanced; strongest models only, for developing new masters).
@@ -60,7 +61,7 @@ Then run the **60-second acceptance checklist** at the bottom of PROMPT.md. Any 
 
 ## The checklist is executable
 
-Every push runs the [conformance checker](checker/check.mjs) against **both masters** in CI — **31 automated checks** each: offline loading (all external requests blocked), navigation, live editing, autosave, plain-text paste, serialization, print CSS, even PDF page count and 16:9 page size. Verify any deck yourself:
+Every push runs the [conformance checker](checker/check.mjs) against **both masters** in CI — **32 automated checks** each: offline loading (all external requests blocked), navigation, live editing, autosave, plain-text paste, serialization, print CSS, even PDF page count and 16:9 page size. Verify any deck yourself:
 
 ```bash
 cd checker && npm install && npx playwright install chromium

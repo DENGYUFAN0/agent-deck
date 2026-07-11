@@ -48,6 +48,23 @@ check('保存实现：File System Access API + 下载兜底',
   /showSaveFilePicker/.test(source) && /\.download\s*=/.test(source));
 check('母版内容界标存在（CONTENT-START / CONTENT-END）',
   source.includes('CONTENT-START') && source.includes('CONTENT-END'));
+/* 创作模式（A-max）样式区：只准 .x- 前缀类与 @ 规则，禁止触碰机件/基础组件选择器 */
+{
+  const customBlock = (source.match(/<style id="custom-style">([\s\S]*?)<\/style>/) || [, ''])[1];
+  const badSel = [];
+  if (customBlock) {
+    const css = customBlock.replace(/\/\*[\s\S]*?\*\//g, '');
+    for (const m of css.matchAll(/([^{}]+)\{/g)) {
+      for (const s of m[1].trim().split(',').map(x => x.trim()).filter(Boolean)) {
+        const ok = s.startsWith('.x-') || s.startsWith('@') || /^(from|to|\d+%)$/.test(s);
+        if (!ok) badSel.push(s);
+      }
+    }
+  }
+  check('创作样式区安全（仅 .x- 前缀 / @ 规则，禁越界机件）', badSel.length === 0,
+    badSel.length ? '越界选择器: ' + badSel.slice(0, 3).join(' | ')
+                  : (customBlock.replace(/\/\*[\s\S]*?\*\//g, '').trim() ? '有创作样式且全部合规' : '专区留空'));
+}
 
 /* ====== 本地服务器：只供本文件，其余一切请求拦截（等价断网） ====== */
 const server = http.createServer((req, res) => {

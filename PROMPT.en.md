@@ -19,6 +19,8 @@ If the scenario is ambiguous, ask the user one question first. The layout menu f
 
 The corporate master carries a "✂ THEME-TOKENS ✂" brand-token zone: **with the user's confirmation**, its CSS variables may be swapped to the client's brand colors — everything outside the token zone remains off-limits, and the two iron rules stand.
 
+**Pick the mode by model tier**: mid/weak models → section A template fill (copy the recipes — the empirically 31/31 path); strong models → A + A-pro by default, and when the user explicitly asks for creativity → **A-max creative mode**.
+
 ---
 
 ## A. Template fill (default mode — works with any model)
@@ -75,6 +77,36 @@ Scenario: 【lab meeting / pitch / …】  Master: 【academic / corporate】  O
 ```
 
 After the user annotates and confirms, send step two: "Following the confirmed plan, do section-A template fill and return the complete single-file HTML." Drift gets corrected at the cheap plan stage, an order of magnitude cheaper than reworking tens of KB of HTML.
+
+---
+
+## A-max. Creative mode (strong models only — channel creativity into layout and visual storytelling)
+
+Applies when the model is strong **and the user explicitly asks for creativity**. Mid/weak models must stay on section A — three rounds of cross-agent evidence made this a guardrail, not gatekeeping. Best combined with A-pro: plan first, create after confirmation.
+
+On top of section A's two iron rules, three whitelisted zones open up (everything else stays off-limits):
+
+```text
+1. Free-form layout inside the content markers: no longer bound to the layout menu — invent
+   page structures and narrative rhythm (magazine openers, full-bleed quote slides, timeline
+   spreads, asymmetric columns…), but every slide must remain a <section class="slide">…</section>,
+   and the slide-foot / aside.notes conventions stay;
+2. The <style id="custom-style"> zone for your own CSS: every new class must carry the .x- prefix
+   (.x-hero / .x-quote / .x-timeline); additions only — never override machinery or base-component
+   selectors; animation is allowed but restrained, and must degrade to nothing or a static
+   equivalent in print (the L2 three questions still apply);
+3. The ✂ THEME-TOKENS ✂ zone for re-theming: swap the palette wholesale with the user's
+   confirmation (the academic canonical master stays uncolored by default).
+
+Creative code of conduct (violations demote you back to section A):
+- The machinery (<script> and presentation UI) stays byte-identical — creativity is not for
+  reinventing the wheel;
+- The layout budget and F10 still apply: freedom of composition, not freedom to overstuff;
+- Every invented layout gets one line in the plan: which standard recipe it replaces and why
+  it is better;
+- Delivery must still pass all 32 checker items — the custom-style zone has a dedicated check,
+  and any out-of-bounds selector fails it.
+```
 
 ---
 
